@@ -1,7 +1,7 @@
 {
   "goal": "A gate-first, engine-independent Go core that turns a GitHub issue into a gated pull request and addresses human review feedback on that pull request, behind a pluggable Runner interface. The agent proposes; it never merges and holds no deploy credential.",
   "date": "2026-07-30",
-  "progress": "Both core loops ship and are dogfooded. Issue-to-PR (loop.Run) produced a merged dependency-upgrade PR on charlesgreen/gsm. Fix-on-request (loop.Fix, `simplycubed address`) is built and tested end to end against a real git repo and bare remote. The codex-on-Azure adapter is real; the whole loop still tests with no model behind the fake Runner.",
+  "progress": "Both core loops ship and are dogfooded. Issue-to-PR (loop.Run) produced a merged dependency-upgrade PR on charlesgreen/gsm. Fix-on-request (loop.Fix, `aixgo address`) is built and tested end to end against a real git repo and bare remote. The codex-on-Azure adapter is real; the whole loop still tests with no model behind the fake Runner.",
   "invariants": [
     "claude-proposes-actions-dispose: the loop only ever opens or updates a pull request; it never merges and holds no deploy credential.",
     "gate-first: no change is proposed until the repo's own gate passes, and `make check` is green at every commit.",
@@ -18,13 +18,13 @@
     { "id": "M5", "title": "JSONL run ledger, wired into the loop", "status": "done" },
     { "id": "M6", "title": "Codex-on-Azure Runner adapter and per-run config", "status": "done" },
     { "id": "M7", "title": "run CLI and end-to-end composition; first live PR on gsm", "status": "done" },
-    { "id": "M8", "title": "Fix-on-request loop (loop.Fix, `simplycubed address`)", "status": "done" },
+    { "id": "M8", "title": "Fix-on-request loop (loop.Fix, `aixgo address`)", "status": "done" },
     { "id": "M9", "title": "Attribution marker on generated commits and PRs (config-gated)", "status": "done" },
     { "id": "M10", "title": "Wire the read-only reviewer role into the loop (verdict -> fixer, comment-only)", "status": "next" },
     { "id": "M11", "title": "Self-onboarding via bootstrap issue and setup PRs", "status": "planned" }
   ],
   "pending_human": [
-    "First live fix-on-request run against charlesgreen/gsm#1: spends Azure tokens and pushes to an external contributor's branch, so it needs an explicit go-ahead. Prereqs: gsm has a .github/simplycubed.yml whose gate mirrors gsm's real CI, plus the sc: labels.",
+    "First live fix-on-request run against charlesgreen/gsm#1: spends Azure tokens and pushes to an external contributor's branch, so it needs an explicit go-ahead. Prereqs: gsm has a .github/aixgo.yml whose gate mirrors gsm's real CI, plus the ax: labels.",
     "Per-role bot identities and making decisions about the reviewer's output contract (comment-only, never a bot approval) before M10 ships."
   ],
   "notes": "The engine roadmap (Claude Code adapter, then Hugging Face self-hosted) is additional Runner implementations, not core rework. Full plan: ~/.claude/plans/solutions-architect-agent-ml-engineer-a-robust-sparkle.md"

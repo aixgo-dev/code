@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	forgefake "github.com/simplycubed/code/internal/forge/fake"
+	forgefake "github.com/aixgo-dev/code/internal/forge/fake"
 )
 
 func TestWritesAreRecordedNotPerformed(t *testing.T) {
@@ -13,10 +13,10 @@ func TestWritesAreRecordedNotPerformed(t *testing.T) {
 	f := New(inner)
 	ctx := context.Background()
 
-	if _, err := f.OpenPR(ctx, "o/r", "sc/1", "Closes #1: t", "body"); err != nil {
+	if _, err := f.OpenPR(ctx, "o/r", "ax/1", "Closes #1: t", "body"); err != nil {
 		t.Fatal(err)
 	}
-	_ = f.SetState(ctx, "o/r", 1, "sc:review")
+	_ = f.SetState(ctx, "o/r", 1, "ax:review")
 	_ = f.Comment(ctx, "o/r", 1, "blocked: x")
 	_ = f.CommentPR(ctx, "o/r", 2, "ready")
 
@@ -54,11 +54,11 @@ func TestReadsPassThrough(t *testing.T) {
 func TestReportNamesEachSkippedWrite(t *testing.T) {
 	f := New(&forgefake.Forge{})
 	ctx := context.Background()
-	_, _ = f.OpenPR(ctx, "o/r", "sc/7", "Closes #7: title", "the body")
-	_ = f.SetState(ctx, "o/r", 7, "sc:review")
+	_, _ = f.OpenPR(ctx, "o/r", "ax/7", "Closes #7: title", "the body")
+	_ = f.SetState(ctx, "o/r", 7, "ax:review")
 
 	got := f.Report()
-	for _, want := range []string{"DRY RUN", "open-pr", "o/r (sc/7)", "Closes #7: title", "the body", "set-state", "sc:review"} {
+	for _, want := range []string{"DRY RUN", "open-pr", "o/r (ax/7)", "Closes #7: title", "the body", "set-state", "ax:review"} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("report missing %q:\n%s", want, got)
 		}

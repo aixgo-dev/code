@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/simplycubed/code/internal/domain"
+	"github.com/aixgo-dev/code/internal/domain"
 )
 
 // writeFakeCodex writes a stub that mimics the parts of `codex exec` the adapter

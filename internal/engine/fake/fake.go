@@ -7,7 +7,7 @@ package fake
 import (
 	"context"
 
-	"github.com/simplycubed/code/internal/domain"
+	"github.com/aixgo-dev/code/internal/domain"
 )
 
 // Step is one scripted turn.

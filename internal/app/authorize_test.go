@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/simplycubed/code/internal/app"
-	forgefake "github.com/simplycubed/code/internal/forge/fake"
+	"github.com/aixgo-dev/code/internal/app"
+	forgefake "github.com/aixgo-dev/code/internal/forge/fake"
 )
 
 // Authorization decides who may start a run. It used to live in workflow shell

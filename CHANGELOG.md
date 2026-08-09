@@ -3,6 +3,52 @@
 All notable changes are recorded here and summarized again in the matching
 GitHub release notes for each tag.
 
+## v0.4.0
+
+**Breaking. The project moved and was renamed.** The repository is now
+`aixgo-dev/code` and the product is Aixgo Code. Nothing about how the agent
+works changed in this release; every change below is a name.
+
+Re-run `aixgo init --workflow --app-name <your-app>` in each adopter repository
+to regenerate the config and workflow files under the new names, then rename the
+repository variables and secrets and the labels listed below. The old files keep
+working until they are replaced only in the sense that nothing deletes them: the
+new CLI reads `.github/aixgo.yml`, so an unmigrated repo behaves as if it has no
+config at all.
+
+- **Module path.** `github.com/simplycubed/code` becomes
+  `github.com/aixgo-dev/code`. Install with
+  `go install github.com/aixgo-dev/code/cmd/aixgo@<release-tag>`.
+- **Binary.** `simplycubed` becomes `aixgo`. Every subcommand is unchanged:
+  `aixgo init`, `aixgo preflight`, `aixgo command`, `aixgo run`,
+  `aixgo address`, `aixgo version`.
+- **Config file.** `.github/simplycubed.yml` becomes `.github/aixgo.yml`.
+- **Workflows.** The reusable workflow is
+  `aixgo-dev/code/.github/workflows/aixgo.yml`, and `init --workflow` writes
+  `.github/workflows/aixgo.yml` and `.github/workflows/aixgo-selftest.yml`.
+- **Variables and secrets.** `SIMPLYCUBED_GH_APP_CLIENT_ID`,
+  `SIMPLYCUBED_GH_APP_PRIVATE_KEY`, `SIMPLYCUBED_AZURE_OPENAI_ENDPOINT`,
+  `SIMPLYCUBED_AZURE_OPENAI_API_KEY`, `SIMPLYCUBED_GH_APP_LOGIN`,
+  `SIMPLYCUBED_DRY_RUN`, and `SIMPLYCUBED_SANDBOX` take the `AIXGO_` prefix. A
+  value read by the old name is not read at all, so a run with the old names set
+  fails on a missing value rather than using a stale one.
+- **App name.** The App this repository installs is `aixgo-code`. Adopters keep
+  their own App name; `appName:` was already per-adopter and is untouched by the
+  rename.
+- **Label prefix.** The default `labelPrefix` is `ax`, so the lifecycle is
+  `ax:go`, `ax:queued`, `ax:working`, `ax:review`, `ax:blocked`, `ax:done`. A
+  repository that wants to keep the old labels can set `labelPrefix: sc`
+  explicitly; `init` creates the new ones and leaves the old ones in place.
+- **Scratch paths.** The per-run scratch directory is `.aixgo/` and the ledger
+  branch is `aixgo/ledger`.
+- **Attribution marker.** Generated commits and pull requests are marked
+  `Aixgo Code`.
+
+Tags before `v0.4.0` remain in the repository's history, but their `go.mod`
+still declares the old module path, so they are not installable as
+`github.com/aixgo-dev/code`. To run a pre-move release, install it from
+`github.com/simplycubed/code` at that tag.
+
 ## v0.3.0
 
 **Comment commands address your own App.** v0.2.0 replaced `@simplycubed-code`

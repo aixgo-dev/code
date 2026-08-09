@@ -9,7 +9,7 @@ import (
 const defaultVersion = "0.0.0-dev"
 
 // Version is the current version. It is overridden at release time via
-// -ldflags "-X github.com/simplycubed/code/internal/buildinfo.Version=...".
+// -ldflags "-X github.com/aixgo-dev/code/internal/buildinfo.Version=...".
 var Version = defaultVersion
 
 func init() {

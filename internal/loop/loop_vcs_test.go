@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/simplycubed/code/internal/domain"
-	enginefake "github.com/simplycubed/code/internal/engine/fake"
-	forgefake "github.com/simplycubed/code/internal/forge/fake"
+	"github.com/aixgo-dev/code/internal/domain"
+	enginefake "github.com/aixgo-dev/code/internal/engine/fake"
+	forgefake "github.com/aixgo-dev/code/internal/forge/fake"
 )
 
 type fakeVCS struct {
@@ -200,7 +200,7 @@ func TestWorkflowEscalationNamesTheAuthenticatedIdentity(t *testing.T) {
 		if !strings.Contains(res.Reason, "`acme-code[bot]` GitHub App") {
 			t.Fatalf("reason = %q, expected it to name the authenticated identity", res.Reason)
 		}
-		if strings.Contains(res.Reason, "simplycubed-code[bot]") {
+		if strings.Contains(res.Reason, "aixgo-code[bot]") {
 			t.Fatalf("reason = %q, must not name our App in an adopter's repository", res.Reason)
 		}
 	})

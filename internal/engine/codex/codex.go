@@ -24,7 +24,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/simplycubed/code/internal/domain"
+	"github.com/aixgo-dev/code/internal/domain"
 )
 
 // Runner runs one role turn via `codex exec`.
@@ -74,7 +74,7 @@ func (r *Runner) Run(ctx context.Context, req domain.RunRequest) (domain.RunResu
 		return domain.RunResult{Role: req.Role, Err: err}, err
 	}
 
-	lastMsg, err := os.CreateTemp("", "sc-lastmsg-*.txt")
+	lastMsg, err := os.CreateTemp("", "ax-lastmsg-*.txt")
 	if err != nil {
 		return domain.RunResult{Role: req.Role, Err: err}, err
 	}

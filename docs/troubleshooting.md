@@ -14,7 +14,7 @@ Use this page to tell those cases apart.
 
 ```mermaid
 flowchart TD
-    S["Run finished green.<br/>No PR. No commits."] --> ST["gh workflow run simplycubed-selftest"]
+    S["Run finished green.<br/>No PR. No commits."] --> ST["gh workflow run aixgo-selftest"]
     ST --> E{"Which step failed?"}
 
     E -->|"engine sandbox"| B["bwrap: loopback: Failed RTM_NEWADDR<br/><br/>The sandbox cannot start on this runner.<br/>Every engine command fails, even pwd."]
@@ -37,10 +37,10 @@ flowchart TD
 ## The two tools
 
 **The self-test** runs in your own runner and checks the things a local run
-cannot tell you. `simplycubed init --workflow` writes it into your repository.
+cannot tell you. `aixgo init --workflow` writes it into your repository.
 
 ```sh
-gh workflow run simplycubed-selftest
+gh workflow run aixgo-selftest
 ```
 
 **A dry run** exercises the whole loop and skips only what would change your
@@ -49,7 +49,7 @@ result. The push and every GitHub write are skipped, and what would have
 happened is printed instead.
 
 ```sh
-simplycubed run owner/repo#12 --dry-run
+aixgo run owner/repo#12 --dry-run
 ```
 
 ## The engine sandbox cannot start
@@ -64,7 +64,7 @@ Actions runner does not permit it. Every command the engine tries then fails,
 including `pwd`, so the agent reads nothing and changes nothing while still
 exiting successfully.
 
-**Do not widen the sandbox to get past this.** `SIMPLYCUBED_SANDBOX` exists for
+**Do not widen the sandbox to get past this.** `AIXGO_SANDBOX` exists for
 adopters who have externally sandboxed their runners and are making that
 decision knowingly. The model provider key is inside the runner, and an
 ephemeral machine does not undo an exfiltrated secret. The
@@ -92,7 +92,7 @@ Pull requests opened with a `GITHUB_TOKEN` do not trigger other workflows. If
 your required checks never appear on the agent's pull requests, the run is
 authenticating with the default token rather than the App.
 
-Check that `SIMPLYCUBED_GH_APP_CLIENT_ID` and `SIMPLYCUBED_GH_APP_PRIVATE_KEY`
+Check that `AIXGO_GH_APP_CLIENT_ID` and `AIXGO_GH_APP_PRIVATE_KEY`
 are set.
 The self-test's first step fails when they are missing or wrong.
 
@@ -111,7 +111,7 @@ workflow before any secret is in scope, and again in the product.
 
 Check what actually triggers a run:
 
-- A `sc:go` label on an issue.
+- A `ax:go` label on an issue.
 - A **submitted review** on a pull request. A plain comment in the conversation
   box is a different GitHub event and does not count. Use **Files changed →
   Review changes**.

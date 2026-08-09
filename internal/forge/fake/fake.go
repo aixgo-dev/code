@@ -8,7 +8,7 @@ import (
 	"slices"
 	"sync"
 
-	"github.com/simplycubed/code/internal/domain"
+	"github.com/aixgo-dev/code/internal/domain"
 )
 
 // Forge records calls made to it.

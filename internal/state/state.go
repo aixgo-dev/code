@@ -1,4 +1,4 @@
-// Package state models the sc: label lifecycle. Exactly one state label sits on
+// Package state models the ax: label lifecycle. Exactly one state label sits on
 // an issue at a time; when the bot advances, it sets the new label and removes
 // the old one. GitHub has no radio-button labels, so that mutual exclusion is
 // enforced here rather than by the platform.
@@ -27,8 +27,8 @@ const (
 // All returns every state in lifecycle order.
 func All() []State { return []State{Go, Queued, Working, Review, Blocked, Done} }
 
-// Label renders the namespaced label for a state, e.g. Label("sc", Working) is
-// "sc:working".
+// Label renders the namespaced label for a state, e.g. Label("ax", Working) is
+// "ax:working".
 func Label(prefix string, s State) string { return prefix + ":" + string(s) }
 
 // HumanApplied reports whether a person sets this state. Only Go.

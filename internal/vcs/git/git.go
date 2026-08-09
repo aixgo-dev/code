@@ -32,7 +32,7 @@ type Git struct {
 	// ScratchPaths are worktree-relative paths of transient agent scratch (build
 	// and module caches the engine writes inside the worktree). They are removed
 	// before staging so they never land in a commit. Defaults to .gocache,
-	// .gopath, and .simplycubed.
+	// .gopath, and .aixgo.
 	ScratchPaths []string
 }
 
@@ -40,7 +40,7 @@ func (g *Git) scratchPaths() []string {
 	if g.ScratchPaths != nil {
 		return g.ScratchPaths
 	}
-	return []string{".gocache", ".gopath", ".simplycubed"}
+	return []string{".gocache", ".gopath", ".aixgo"}
 }
 
 // identity returns the -c overrides that name the committer, when set.

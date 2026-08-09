@@ -8,13 +8,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/simplycubed/code/internal/domain"
-	enginefake "github.com/simplycubed/code/internal/engine/fake"
+	"github.com/aixgo-dev/code/internal/domain"
+	enginefake "github.com/aixgo-dev/code/internal/engine/fake"
 )
 
 func writeArtifact(json string) func(string) error {
 	return func(dir string) error {
-		path := filepath.Join(dir, ".simplycubed", "describe.json")
+		path := filepath.Join(dir, ".aixgo", "describe.json")
 		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 			return err
 		}

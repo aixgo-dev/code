@@ -1,6 +1,6 @@
 # Decision records
 
-Short records of the choices that shape SimplyCubed Code. Each states the
+Short records of the choices that shape Aixgo Code. Each states the
 context, the decision, its status, and the consequences.
 
 Some records are marked **pending S3**. S3 is the replay validation spike:

@@ -9,12 +9,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/simplycubed/code/internal/domain"
-	enginefake "github.com/simplycubed/code/internal/engine/fake"
-	forgefake "github.com/simplycubed/code/internal/forge/fake"
-	"github.com/simplycubed/code/internal/gate"
-	"github.com/simplycubed/code/internal/ledger"
-	"github.com/simplycubed/code/internal/state"
+	"github.com/aixgo-dev/code/internal/domain"
+	enginefake "github.com/aixgo-dev/code/internal/engine/fake"
+	forgefake "github.com/aixgo-dev/code/internal/forge/fake"
+	"github.com/aixgo-dev/code/internal/gate"
+	"github.com/aixgo-dev/code/internal/ledger"
+	"github.com/aixgo-dev/code/internal/state"
 )
 
 // gateChecksFile passes if and only if workDir/fixed exists. Until then it
@@ -58,7 +58,7 @@ func TestSuccessOpensPR(t *testing.T) {
 	if f.PRCount != 1 {
 		t.Fatalf("PRCount = %d want 1", f.PRCount)
 	}
-	if !f.SawState(state.Label("sc", state.Review)) {
+	if !f.SawState(state.Label("ax", state.Review)) {
 		t.Fatal("expected the review label to be set when the PR opens")
 	}
 }
@@ -134,7 +134,7 @@ func TestHonestyStallBlocksAndOpensNoPR(t *testing.T) {
 	if f.PRCount != 0 {
 		t.Fatalf("a blocked run opened %d PRs; must be 0", f.PRCount)
 	}
-	if !f.SawState(state.Label("sc", state.Blocked)) {
+	if !f.SawState(state.Label("ax", state.Blocked)) {
 		t.Fatal("expected the blocked label to be set")
 	}
 	if !strings.Contains(res.Reason, "stall") {

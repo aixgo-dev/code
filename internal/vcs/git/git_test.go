@@ -127,7 +127,7 @@ func TestCommitUsesTheConfiguredIdentity(t *testing.T) {
 	gitCmd(t, work, "config", "--unset", "user.email")
 	gitCmd(t, work, "config", "--unset", "user.name")
 
-	g := &Git{AuthorName: "simplycubed-code[bot]", AuthorEmail: "simplycubed-code@users.noreply.github.com"}
+	g := &Git{AuthorName: "aixgo-code[bot]", AuthorEmail: "aixgo-code@users.noreply.github.com"}
 	if err := os.WriteFile(filepath.Join(work, "a.txt"), []byte("hi"), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -136,7 +136,7 @@ func TestCommitUsesTheConfiguredIdentity(t *testing.T) {
 		t.Fatalf("commit with an explicit identity should succeed: committed=%v err=%v", committed, err)
 	}
 	author := gitCmd(t, work, "log", "-1", "--format=%an <%ae>")
-	if !strings.Contains(author, "simplycubed-code[bot]") {
+	if !strings.Contains(author, "aixgo-code[bot]") {
 		t.Fatalf("author = %q, want the configured identity", author)
 	}
 }
@@ -200,7 +200,7 @@ func TestDryRunCommitsButDoesNotPush(t *testing.T) {
 	work := repoWithBareRemote(t)
 	g := &Git{DryRun: true}
 	ctx := context.Background()
-	gitCmd(t, work, "checkout", "-q", "-b", "sc/1")
+	gitCmd(t, work, "checkout", "-q", "-b", "ax/1")
 	if err := os.WriteFile(filepath.Join(work, "a.txt"), []byte("hi"), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -208,11 +208,11 @@ func TestDryRunCommitsButDoesNotPush(t *testing.T) {
 	if err != nil || !committed {
 		t.Fatalf("a dry run should still commit: committed=%v err=%v", committed, err)
 	}
-	if err := g.Push(ctx, work, "sc/1"); err != nil {
+	if err := g.Push(ctx, work, "ax/1"); err != nil {
 		t.Fatalf("dry-run push should be a no-op, got: %v", err)
 	}
 	// The remote must not have the branch.
-	out := gitCmd(t, work, "ls-remote", "--heads", "origin", "sc/1")
+	out := gitCmd(t, work, "ls-remote", "--heads", "origin", "ax/1")
 	if strings.TrimSpace(out) != "" {
 		t.Fatalf("a dry run must not push, but the remote has the branch: %s", out)
 	}

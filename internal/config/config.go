@@ -1,4 +1,4 @@
-// Package config loads the per-repo contract from .github/simplycubed.yml.
+// Package config loads the per-repo contract from .github/aixgo.yml.
 //
 // The one hard rule: `gate:` is required. A repo with no gate is refused, on
 // purpose, because an ungated loop is not safe to run. That rule is the point of
@@ -18,7 +18,7 @@ import (
 
 // DefaultLabelPrefix is used when the config does not set one. Short by choice:
 // the bot byline already carries the full brand, so labels do not repeat it.
-const DefaultLabelPrefix = "sc"
+const DefaultLabelPrefix = "ax"
 
 // ErrNoGate is returned when the config has no gate command.
 var ErrNoGate = errors.New("config: `gate:` is required; a repo with no gate is refused")
@@ -29,7 +29,7 @@ type Config struct {
 	Gate        string
 	Setup       string
 	// Attribution controls whether generated commits and pull requests carry a
-	// "SimplyCubed Code" marker. On by default; a repo owner turns it off with
+	// "Aixgo Code" marker. On by default; a repo owner turns it off with
 	// `attribution: false`.
 	Attribution bool
 	// PRDescription selects the generated pull-request body style. "" (the

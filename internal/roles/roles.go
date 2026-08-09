@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/simplycubed/code/internal/domain"
+	"github.com/aixgo-dev/code/internal/domain"
 )
 
 // Bounds are the hard rules every role runs under. They are stated to the model

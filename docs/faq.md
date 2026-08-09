@@ -1,6 +1,6 @@
 # FAQ
 
-Questions that come up when you point SimplyCubed Code at a repository for the
+Questions that come up when you point Aixgo Code at a repository for the
 first time. Most of them are really one question in disguise: **what should the
 gate be, and why won't the agent run until it is right?**
 
@@ -8,9 +8,9 @@ gate be, and why won't the agent run until it is right?**
 
 For the GitHub Actions runtime, yes. For local development, no.
 
-You can use SimplyCubed Code two ways:
+You can use Aixgo Code two ways:
 
-- as a local CLI (`simplycubed run` and `simplycubed address`) using your own
+- as a local CLI (`aixgo run` and `aixgo address`) using your own
   `gh` authentication, which reads the repo config, works in a git worktree,
   runs your gate, and opens or updates a pull request as you;
 - or through the reusable workflow that runs inside your own GitHub Actions, as
@@ -28,7 +28,7 @@ as a human or run the CLI locally under your own `gh` auth instead of the App.
 
 Both engines ship an escape hatch: Codex has `--dangerously-bypass-approvals-and-sandbox`
 and a `danger-full-access` sandbox mode, and Claude Code has
-`--dangerously-skip-permissions`. SimplyCubed Code does not set any of them for
+`--dangerously-skip-permissions`. Aixgo Code does not set any of them for
 you, and the reason is worth stating plainly because reaching for them is
 tempting.
 
@@ -52,7 +52,7 @@ run stops and a human does it. That is not a gap in the design; it is the
 design. The same rule already applies to workflow files, which the App
 deliberately cannot push.
 
-`SIMPLYCUBED_SANDBOX` exists as a knob so an adopter who has genuinely
+`AIXGO_SANDBOX` exists as a knob so an adopter who has genuinely
 externally sandboxed their runners can widen it themselves, with their eyes
 open. Nothing in this repository sets it.
 
@@ -95,9 +95,9 @@ It applies to the runner, which is an ephemeral VM that exists for this one job
 and is destroyed after it. Nothing about the host is changed and nothing about
 the App's permissions is widened.
 
-## Are the `sc:` labels created for me?
+## Are the `ax:` labels created for me?
 
-Yes, once. `simplycubed init --workflow` creates the six state labels through
+Yes, once. `aixgo init --workflow` creates the six state labels through
 your own `gh` auth, and writes the config, the caller workflow, and the install
 self-test as local files.
 
@@ -109,7 +109,7 @@ permission and cannot add its own workflow files.
 ## The agent won't propose anything. Why?
 
 Almost always because the gate does not pass, and the gate is the whole point.
-SimplyCubed Code will not declare a change done, or open a pull request, until the
+Aixgo Code will not declare a change done, or open a pull request, until the
 gate command exits zero. A loop with nothing to stop it wanders, breaks things,
 and still reports success, so a repo with no gate is refused and a repo whose gate
 cannot pass gets a change that stalls and asks for a human.

@@ -1,4 +1,4 @@
-name: simplycubed
+name: aixgo
 
 on:
   issue_comment:
@@ -10,34 +10,34 @@ on:
 
 jobs:
   run:
-    if: ${{ github.event_name == 'issues' && github.event.label.name == 'sc:go' }}
-    uses: simplycubed/code/.github/workflows/simplycubed.yml@__SIMPLYCUBED_TAG__
+    if: ${{ github.event_name == 'issues' && github.event.label.name == 'ax:go' }}
+    uses: aixgo-dev/code/.github/workflows/aixgo.yml@__AIXGO_TAG__
     with:
       ref: ${{ github.event.issue.number }}
-      github-app-client-id: ${{ vars.SIMPLYCUBED_GH_APP_CLIENT_ID }}
+      github-app-client-id: ${{ vars.AIXGO_GH_APP_CLIENT_ID }}
       issue-number: ${{ github.event.issue.number }}
       actor-login: ${{ github.event.sender.login }}
-      azure-openai-endpoint: ${{ vars.SIMPLYCUBED_AZURE_OPENAI_ENDPOINT }}
+      azure-openai-endpoint: ${{ vars.AIXGO_AZURE_OPENAI_ENDPOINT }}
       # model: my-gpt-5-4-deployment
     secrets:
-      azure-openai-api-key: ${{ secrets.SIMPLYCUBED_AZURE_OPENAI_API_KEY }}
-      github-app-private-key: ${{ secrets.SIMPLYCUBED_GH_APP_PRIVATE_KEY }}
+      azure-openai-api-key: ${{ secrets.AIXGO_AZURE_OPENAI_API_KEY }}
+      github-app-private-key: ${{ secrets.AIXGO_GH_APP_PRIVATE_KEY }}
 
   address:
     if: >-
       github.event_name == 'pull_request_review' &&
       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.review.author_association)
-    uses: simplycubed/code/.github/workflows/simplycubed.yml@__SIMPLYCUBED_TAG__
+    uses: aixgo-dev/code/.github/workflows/aixgo.yml@__AIXGO_TAG__
     with:
       ref: ${{ github.event.pull_request.number }}
-      github-app-client-id: ${{ vars.SIMPLYCUBED_GH_APP_CLIENT_ID }}
+      github-app-client-id: ${{ vars.AIXGO_GH_APP_CLIENT_ID }}
       pr-number: ${{ github.event.pull_request.number }}
       actor-login: ${{ github.event.review.user.login }}
-      azure-openai-endpoint: ${{ vars.SIMPLYCUBED_AZURE_OPENAI_ENDPOINT }}
+      azure-openai-endpoint: ${{ vars.AIXGO_AZURE_OPENAI_ENDPOINT }}
       # model: my-gpt-5-4-deployment
     secrets:
-      azure-openai-api-key: ${{ secrets.SIMPLYCUBED_AZURE_OPENAI_API_KEY }}
-      github-app-private-key: ${{ secrets.SIMPLYCUBED_GH_APP_PRIVATE_KEY }}
+      azure-openai-api-key: ${{ secrets.AIXGO_AZURE_OPENAI_API_KEY }}
+      github-app-private-key: ${{ secrets.AIXGO_GH_APP_PRIVATE_KEY }}
 
   comment:
     # issue_comment fires for any user on a public repository, so the command
@@ -48,17 +48,17 @@ jobs:
     if: >-
       github.event_name == 'issue_comment' &&
       github.event.comment.user.type != 'Bot' &&
-      startsWith(github.event.comment.body, '@__SIMPLYCUBED_APP_NAME__') &&
+      startsWith(github.event.comment.body, '@__AIXGO_APP_NAME__') &&
       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
-    uses: simplycubed/code/.github/workflows/simplycubed.yml@__SIMPLYCUBED_TAG__
+    uses: aixgo-dev/code/.github/workflows/aixgo.yml@__AIXGO_TAG__
     with:
       ref: ${{ github.event.issue.number }}
-      github-app-client-id: ${{ vars.SIMPLYCUBED_GH_APP_CLIENT_ID }}
+      github-app-client-id: ${{ vars.AIXGO_GH_APP_CLIENT_ID }}
       comment-body: ${{ github.event.comment.body }}
       issue-number: ${{ github.event.issue.pull_request == null && github.event.issue.number || '' }}
       pr-number: ${{ github.event.issue.pull_request != null && github.event.issue.number || '' }}
       actor-login: ${{ github.event.comment.user.login }}
-      azure-openai-endpoint: ${{ vars.SIMPLYCUBED_AZURE_OPENAI_ENDPOINT }}
+      azure-openai-endpoint: ${{ vars.AIXGO_AZURE_OPENAI_ENDPOINT }}
     secrets:
-      azure-openai-api-key: ${{ secrets.SIMPLYCUBED_AZURE_OPENAI_API_KEY }}
-      github-app-private-key: ${{ secrets.SIMPLYCUBED_GH_APP_PRIVATE_KEY }}
+      azure-openai-api-key: ${{ secrets.AIXGO_AZURE_OPENAI_API_KEY }}
+      github-app-private-key: ${{ secrets.AIXGO_GH_APP_PRIVATE_KEY }}

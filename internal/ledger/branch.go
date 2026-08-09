@@ -20,7 +20,7 @@ import (
 // control flow.
 type BranchStore struct {
 	RepoDir string // a git checkout with a remote
-	Branch  string // defaults to "simplycubed/ledger"
+	Branch  string // defaults to "aixgo/ledger"
 	Remote  string // defaults to "origin"
 	// AuthorName and AuthorEmail identify the committer, for the same reason
 	// the VCS layer needs them: a runner has no git identity.
@@ -32,7 +32,7 @@ func (s *BranchStore) branch() string {
 	if s.Branch != "" {
 		return s.Branch
 	}
-	return "simplycubed/ledger"
+	return "aixgo/ledger"
 }
 
 func (s *BranchStore) remote() string {
@@ -64,7 +64,7 @@ func (s *BranchStore) Append(ctx context.Context, lines string, day time.Time) e
 	if strings.TrimSpace(lines) == "" {
 		return nil
 	}
-	work, err := os.MkdirTemp("", "sc-ledger-")
+	work, err := os.MkdirTemp("", "ax-ledger-")
 	if err != nil {
 		return err
 	}

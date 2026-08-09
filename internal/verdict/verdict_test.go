@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/simplycubed/code/internal/domain"
+	"github.com/aixgo-dev/code/internal/domain"
 )
 
 func TestParseAcceptsAWellFormedVerdict(t *testing.T) {

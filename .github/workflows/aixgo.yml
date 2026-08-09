@@ -1,4 +1,4 @@
-name: simplycubed
+name: aixgo
 
 on:
   workflow_call:
@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       github-app-client-id:
-        description: GitHub App Client ID for the SimplyCubed App, the Iv23 string
+        description: GitHub App Client ID for the Aixgo App, the Iv23 string
           on the App settings page.
         default: ""
         required: false
@@ -42,13 +42,13 @@ on:
         required: true
         type: string
       model:
-        description: Engine model or deployment name passed to the SimplyCubed CLI.
+        description: Engine model or deployment name passed to the Aixgo CLI.
         default: gpt-5.4
         required: false
         type: string
       version:
-        description: SimplyCubed CLI tag to install.
-        default: v0.3.0
+        description: Aixgo CLI tag to install.
+        default: v0.4.0
         required: false
         type: string
     secrets:
@@ -61,7 +61,7 @@ jobs:
   run:
     if: ${{ inputs['issue-number'] != '' }}
     runs-on: ubuntu-latest
-    concurrency: simplycubed-${{ inputs.ref }}
+    concurrency: aixgo-${{ inputs.ref }}
     permissions: {}
     steps:
       - name: Resolve repository scope
@@ -93,16 +93,16 @@ jobs:
         with:
           go-version: "1.26"
 
-      - name: Install SimplyCubed CLI
-        run: go install github.com/simplycubed/code/cmd/simplycubed@${{ inputs.version }}
+      - name: Install Aixgo CLI
+        run: go install github.com/aixgo-dev/code/cmd/aixgo@${{ inputs.version }}
 
       - name: Preflight
         env:
-          SIMPLYCUBED_AZURE_OPENAI_ENDPOINT: ${{ inputs['azure-openai-endpoint'] }}
-          SIMPLYCUBED_AZURE_OPENAI_API_KEY: ${{ secrets['azure-openai-api-key'] }}
-          SIMPLYCUBED_GH_APP_CLIENT_ID: ${{ inputs['github-app-client-id'] }}
-          SIMPLYCUBED_GH_APP_PRIVATE_KEY: ${{ secrets['github-app-private-key'] }}
-        run: simplycubed preflight --repo-dir . --actions
+          AIXGO_AZURE_OPENAI_ENDPOINT: ${{ inputs['azure-openai-endpoint'] }}
+          AIXGO_AZURE_OPENAI_API_KEY: ${{ secrets['azure-openai-api-key'] }}
+          AIXGO_GH_APP_CLIENT_ID: ${{ inputs['github-app-client-id'] }}
+          AIXGO_GH_APP_PRIVATE_KEY: ${{ secrets['github-app-private-key'] }}
+        run: aixgo preflight --repo-dir . --actions
 
       - name: Let the engine sandbox start
         # The engine sandboxes itself with a vendored bubblewrap, and bubblewrap
@@ -126,11 +126,11 @@ jobs:
       - name: Install Codex CLI
         run: npm install -g @openai/codex@0.146.0
 
-      - name: Run SimplyCubed
+      - name: Run Aixgo
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          SIMPLYCUBED_AZURE_OPENAI_ENDPOINT: ${{ inputs['azure-openai-endpoint'] }}
-          SIMPLYCUBED_AZURE_OPENAI_API_KEY: ${{ secrets['azure-openai-api-key'] }}
+          AIXGO_AZURE_OPENAI_ENDPOINT: ${{ inputs['azure-openai-endpoint'] }}
+          AIXGO_AZURE_OPENAI_API_KEY: ${{ secrets['azure-openai-api-key'] }}
           COMMENT_BODY: ${{ inputs['comment-body'] }}
         # --base is explicit because actions/checkout never creates origin/HEAD,
         # which is the CLI's default base. The CLI resolves that case on its own
@@ -143,15 +143,15 @@ jobs:
         # comment asking it NOT to proceed.
         run: |
           if [ -n "${COMMENT_BODY}" ]; then
-            simplycubed command ${{ inputs['dry-run'] && '--dry-run' || '' }} --body "${COMMENT_BODY}" "${GITHUB_REPOSITORY}#${{ inputs['issue-number'] }}" --actor "${{ inputs['actor-login'] }}" --model "${{ inputs.model }}" --base "origin/${{ github.event.repository.default_branch }}" --repo-dir .
+            aixgo command ${{ inputs['dry-run'] && '--dry-run' || '' }} --body "${COMMENT_BODY}" "${GITHUB_REPOSITORY}#${{ inputs['issue-number'] }}" --actor "${{ inputs['actor-login'] }}" --model "${{ inputs.model }}" --base "origin/${{ github.event.repository.default_branch }}" --repo-dir .
           else
-            simplycubed run ${{ inputs['dry-run'] && '--dry-run' || '' }} "${GITHUB_REPOSITORY}#${{ inputs['issue-number'] }}" --actor "${{ inputs['actor-login'] }}" --model "${{ inputs.model }}" --base "origin/${{ github.event.repository.default_branch }}" --repo-dir .
+            aixgo run ${{ inputs['dry-run'] && '--dry-run' || '' }} "${GITHUB_REPOSITORY}#${{ inputs['issue-number'] }}" --actor "${{ inputs['actor-login'] }}" --model "${{ inputs.model }}" --base "origin/${{ github.event.repository.default_branch }}" --repo-dir .
           fi
 
   address:
     if: ${{ inputs['pr-number'] != '' }}
     runs-on: ubuntu-latest
-    concurrency: simplycubed-${{ inputs.ref }}
+    concurrency: aixgo-${{ inputs.ref }}
     permissions: {}
     steps:
       - name: Resolve repository scope
@@ -183,16 +183,16 @@ jobs:
         with:
           go-version: "1.26"
 
-      - name: Install SimplyCubed CLI
-        run: go install github.com/simplycubed/code/cmd/simplycubed@${{ inputs.version }}
+      - name: Install Aixgo CLI
+        run: go install github.com/aixgo-dev/code/cmd/aixgo@${{ inputs.version }}
 
       - name: Preflight
         env:
-          SIMPLYCUBED_AZURE_OPENAI_ENDPOINT: ${{ inputs['azure-openai-endpoint'] }}
-          SIMPLYCUBED_AZURE_OPENAI_API_KEY: ${{ secrets['azure-openai-api-key'] }}
-          SIMPLYCUBED_GH_APP_CLIENT_ID: ${{ inputs['github-app-client-id'] }}
-          SIMPLYCUBED_GH_APP_PRIVATE_KEY: ${{ secrets['github-app-private-key'] }}
-        run: simplycubed preflight --repo-dir . --actions
+          AIXGO_AZURE_OPENAI_ENDPOINT: ${{ inputs['azure-openai-endpoint'] }}
+          AIXGO_AZURE_OPENAI_API_KEY: ${{ secrets['azure-openai-api-key'] }}
+          AIXGO_GH_APP_CLIENT_ID: ${{ inputs['github-app-client-id'] }}
+          AIXGO_GH_APP_PRIVATE_KEY: ${{ secrets['github-app-private-key'] }}
+        run: aixgo preflight --repo-dir . --actions
 
       - name: Let the engine sandbox start
         # The engine sandboxes itself with a vendored bubblewrap, and bubblewrap
@@ -219,12 +219,12 @@ jobs:
       - name: Address review feedback
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          SIMPLYCUBED_AZURE_OPENAI_ENDPOINT: ${{ inputs['azure-openai-endpoint'] }}
-          SIMPLYCUBED_AZURE_OPENAI_API_KEY: ${{ secrets['azure-openai-api-key'] }}
+          AIXGO_AZURE_OPENAI_ENDPOINT: ${{ inputs['azure-openai-endpoint'] }}
+          AIXGO_AZURE_OPENAI_API_KEY: ${{ secrets['azure-openai-api-key'] }}
           COMMENT_BODY: ${{ inputs['comment-body'] }}
         run: |
           if [ -n "${COMMENT_BODY}" ]; then
-            simplycubed command ${{ inputs['dry-run'] && '--dry-run' || '' }} --body "${COMMENT_BODY}" "${GITHUB_REPOSITORY}#${{ inputs['pr-number'] }}" --actor "${{ inputs['actor-login'] }}" --model "${{ inputs.model }}" --repo-dir .
+            aixgo command ${{ inputs['dry-run'] && '--dry-run' || '' }} --body "${COMMENT_BODY}" "${GITHUB_REPOSITORY}#${{ inputs['pr-number'] }}" --actor "${{ inputs['actor-login'] }}" --model "${{ inputs.model }}" --repo-dir .
           else
-            simplycubed address ${{ inputs['dry-run'] && '--dry-run' || '' }} "${GITHUB_REPOSITORY}#${{ inputs['pr-number'] }}" --actor "${{ inputs['actor-login'] }}" --model "${{ inputs.model }}" --repo-dir .
+            aixgo address ${{ inputs['dry-run'] && '--dry-run' || '' }} "${GITHUB_REPOSITORY}#${{ inputs['pr-number'] }}" --actor "${{ inputs['actor-login'] }}" --model "${{ inputs.model }}" --repo-dir .
           fi

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/simplycubed/code/internal/domain"
+	"github.com/aixgo-dev/code/internal/domain"
 )
 
 func TestRunnerScriptsStepsInOrder(t *testing.T) {

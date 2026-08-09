@@ -19,7 +19,7 @@ func TestParseDefaultsAndGate(t *testing.T) {
 }
 
 func TestParseRefusesMissingGate(t *testing.T) {
-	_, err := Parse([]byte("labelPrefix: sc\n# no gate here\n"))
+	_, err := Parse([]byte("labelPrefix: ax\n# no gate here\n"))
 	if !errors.Is(err, ErrNoGate) {
 		t.Fatalf("want ErrNoGate, got %v", err)
 	}
@@ -45,7 +45,7 @@ func TestParseAttributionDefaultsOnAndDisables(t *testing.T) {
 func TestParseOverridesAndComments(t *testing.T) {
 	in := `
 # a comment
-labelPrefix: "simplycubed"
+labelPrefix: "aixgo"
 gate: 'pnpm check'
 setup: pnpm install
 `
@@ -53,7 +53,7 @@ setup: pnpm install
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if c.LabelPrefix != "simplycubed" {
+	if c.LabelPrefix != "aixgo" {
 		t.Fatalf("labelPrefix = %q", c.LabelPrefix)
 	}
 	if c.Gate != "pnpm check" || c.Setup != "pnpm install" {

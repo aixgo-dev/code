@@ -1,4 +1,4 @@
-module github.com/simplycubed/code
+module github.com/aixgo-dev/code
 
 go 1.26
 

@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a bug in SimplyCubed Code.
+description: Report a bug in Aixgo Code.
 title: "[bug]: "
 labels: ["bug"]
 body:
@@ -8,7 +8,7 @@ body:
       value: |
         Thanks for reporting a bug.
 
-        Do not use this form for a suspected **security vulnerability**. Report those privately through the [Security policy](https://github.com/simplycubed/code/security/policy); see [SECURITY.md](https://github.com/simplycubed/code/blob/main/SECURITY.md).
+        Do not use this form for a suspected **security vulnerability**. Report those privately through the [Security policy](https://github.com/aixgo-dev/code/security/policy); see [SECURITY.md](https://github.com/aixgo-dev/code/blob/main/SECURITY.md).
   - type: textarea
     id: what-happened
     attributes:
@@ -26,14 +26,14 @@ body:
     id: repro
     attributes:
       label: Steps to reproduce
-      description: The command you ran (for example `simplycubed address owner/repo#12`) and the relevant `.github/simplycubed.yml`. Redact anything private.
+      description: The command you ran (for example `aixgo address owner/repo#12`) and the relevant `.github/aixgo.yml`. Redact anything private.
     validations:
       required: true
   - type: input
     id: version
     attributes:
       label: Version
-      description: Output of `simplycubed version`.
+      description: Output of `aixgo version`.
     validations:
       required: true
   - type: dropdown

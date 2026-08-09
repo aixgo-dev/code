@@ -5,14 +5,14 @@ import (
 	"context"
 	"errors"
 	"flag"
-	"github.com/simplycubed/code/internal/config"
-	"github.com/simplycubed/code/internal/domain"
-	"github.com/simplycubed/code/internal/engine/claude"
-	"github.com/simplycubed/code/internal/engine/codex"
-	forge2 "github.com/simplycubed/code/internal/forge"
-	"github.com/simplycubed/code/internal/forge/dryrun"
-	forgefake "github.com/simplycubed/code/internal/forge/fake"
-	vcsgit "github.com/simplycubed/code/internal/vcs/git"
+	"github.com/aixgo-dev/code/internal/config"
+	"github.com/aixgo-dev/code/internal/domain"
+	"github.com/aixgo-dev/code/internal/engine/claude"
+	"github.com/aixgo-dev/code/internal/engine/codex"
+	forge2 "github.com/aixgo-dev/code/internal/forge"
+	"github.com/aixgo-dev/code/internal/forge/dryrun"
+	forgefake "github.com/aixgo-dev/code/internal/forge/fake"
+	vcsgit "github.com/aixgo-dev/code/internal/vcs/git"
 	"io"
 	"os"
 	"path/filepath"
@@ -20,7 +20,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/simplycubed/code/internal/buildinfo"
+	"github.com/aixgo-dev/code/internal/buildinfo"
 )
 
 func newTestFlagSet() (*flag.FlagSet, *string) {
@@ -92,13 +92,13 @@ exit 0
 		t.Fatalf("initCmd: %v", err)
 	}
 
-	configPath := filepath.Join(repoDir, ".github", "simplycubed.yml")
+	configPath := filepath.Join(repoDir, ".github", "aixgo.yml")
 	got, err := os.ReadFile(configPath)
 	if err != nil {
 		t.Fatalf("read config: %v", err)
 	}
 	text := string(got)
-	for _, want := range []string{"labelPrefix: sc", "gate:", "# Required. Fill this in with the real gate"} {
+	for _, want := range []string{"labelPrefix: ax", "gate:", "# Required. Fill this in with the real gate"} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("starter config missing %q:\n%s", want, text)
 		}
@@ -110,12 +110,12 @@ exit 0
 	}
 	for _, want := range []string{
 		"label list --limit 1000 --json name",
-		"label create sc:go",
-		"label create sc:queued",
-		"label create sc:working",
-		"label create sc:review",
-		"label create sc:blocked",
-		"label create sc:done",
+		"label create ax:go",
+		"label create ax:queued",
+		"label create ax:working",
+		"label create ax:review",
+		"label create ax:blocked",
+		"label create ax:done",
 	} {
 		if !strings.Contains(string(logged), want) {
 			t.Fatalf("gh log missing %q:\n%s", want, logged)
@@ -125,7 +125,7 @@ exit 0
 	output := out.String()
 	for _, want := range []string{
 		"wrote " + configPath,
-		"created labels: sc:go, sc:queued, sc:working, sc:review, sc:blocked, sc:done",
+		"created labels: ax:go, ax:queued, ax:working, ax:review, ax:blocked, ax:done",
 		// The App has to be the adopter's own, and the output has to say why.
 		// Without that, "create a GitHub App" reads as busywork we could have
 		// done for them, and the natural next move is to look for ours.
@@ -139,20 +139,20 @@ exit 0
 		"Set Any account under Where can this GitHub App be installed",
 		"GitHub\n     shows it once",
 		"https://docs.github.com/apps/creating-github-apps",
-		"write the real gate in .github/simplycubed.yml",
+		"write the real gate in .github/aixgo.yml",
 		"verify that gate is green on your main branch",
 		// Naming the section is the point: two of the four go under Variables
 		// and two under Secrets, and a value filed on the wrong tab reads back
 		// empty rather than erroring.
 		"add two repository VARIABLES",
-		"SIMPLYCUBED_GH_APP_CLIENT_ID       the App Client ID, the Iv23 string on the App settings page",
-		"SIMPLYCUBED_AZURE_OPENAI_ENDPOINT  e.g. https://<resource>.openai.azure.com",
+		"AIXGO_GH_APP_CLIENT_ID       the App Client ID, the Iv23 string on the App settings page",
+		"AIXGO_AZURE_OPENAI_ENDPOINT  e.g. https://<resource>.openai.azure.com",
 		"add two repository SECRETS",
-		"SIMPLYCUBED_GH_APP_PRIVATE_KEY     the full PEM, including the BEGIN and END lines",
-		"SIMPLYCUBED_AZURE_OPENAI_API_KEY   the Azure OpenAI key",
+		"AIXGO_GH_APP_PRIVATE_KEY     the full PEM, including the BEGIN and END lines",
+		"AIXGO_AZURE_OPENAI_API_KEY   the Azure OpenAI key",
 		"Variables and Secrets are different tabs",
 		"merge the PR containing the config and workflow changes",
-		"file an issue and apply the sc:go label",
+		"file an issue and apply the ax:go label",
 	} {
 		if !strings.Contains(output, want) {
 			t.Fatalf("output missing %q:\n%s", want, output)
@@ -165,7 +165,7 @@ func TestInitIsNoOpWhenConfigAndLabelsExist(t *testing.T) {
 		t.Skip("gh stub is a POSIX shell script")
 	}
 	repoDir := t.TempDir()
-	configPath := filepath.Join(repoDir, ".github", "simplycubed.yml")
+	configPath := filepath.Join(repoDir, ".github", "aixgo.yml")
 	if err := os.MkdirAll(filepath.Dir(configPath), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -180,7 +180,7 @@ func TestInitIsNoOpWhenConfigAndLabelsExist(t *testing.T) {
 	script := `#!/bin/sh
 printf '%s\n' "$*" >> "$GH_STUB_LOG"
 if [ "$1 $2" = "label list" ]; then
-  echo '[{"name":"sc:go"},{"name":"sc:queued"},{"name":"sc:working"},{"name":"sc:review"},{"name":"sc:blocked"},{"name":"sc:done"}]'
+  echo '[{"name":"ax:go"},{"name":"ax:queued"},{"name":"ax:working"},{"name":"ax:review"},{"name":"ax:blocked"},{"name":"ax:done"}]'
   exit 0
 fi
 exit 0
@@ -250,7 +250,7 @@ exit 0
 		t.Fatalf("initCmd: %v", err)
 	}
 
-	workflowPath := filepath.Join(repoDir, ".github", "workflows", "simplycubed.yml")
+	workflowPath := filepath.Join(repoDir, ".github", "workflows", "aixgo.yml")
 	got, err := os.ReadFile(workflowPath)
 	if err != nil {
 		t.Fatalf("read workflow: %v", err)
@@ -260,10 +260,10 @@ exit 0
 		t.Fatalf("workflow still contains template token:\n%s", workflow)
 	}
 	for _, want := range []string{
-		"uses: simplycubed/code/.github/workflows/simplycubed.yml@v0.1.0",
-		"github-app-client-id: ${{ vars.SIMPLYCUBED_GH_APP_CLIENT_ID }}",
-		"azure-openai-api-key: ${{ secrets.SIMPLYCUBED_AZURE_OPENAI_API_KEY }}",
-		"github-app-private-key: ${{ secrets.SIMPLYCUBED_GH_APP_PRIVATE_KEY }}",
+		"uses: aixgo-dev/code/.github/workflows/aixgo.yml@v0.1.0",
+		"github-app-client-id: ${{ vars.AIXGO_GH_APP_CLIENT_ID }}",
+		"azure-openai-api-key: ${{ secrets.AIXGO_AZURE_OPENAI_API_KEY }}",
+		"github-app-private-key: ${{ secrets.AIXGO_GH_APP_PRIVATE_KEY }}",
 	} {
 		if !strings.Contains(workflow, want) {
 			t.Fatalf("workflow missing %q:\n%s", want, workflow)
@@ -272,7 +272,7 @@ exit 0
 
 	// The self-test is written alongside the caller, and the operator is told to
 	// remove it: it is an install check, not part of normal operation.
-	selftestPath := filepath.Join(repoDir, ".github", "workflows", "simplycubed-selftest.yml")
+	selftestPath := filepath.Join(repoDir, ".github", "workflows", "aixgo-selftest.yml")
 	if _, err := os.Stat(selftestPath); err != nil {
 		t.Fatalf("self-test workflow not written: %v", err)
 	}
@@ -280,7 +280,7 @@ exit 0
 	if !strings.Contains(output, "wrote "+workflowPath) {
 		t.Fatalf("expected workflow write message:\n%s", output)
 	}
-	for _, want := range []string{"run the self-test once", "delete " + ".github/workflows/simplycubed-selftest.yml"} {
+	for _, want := range []string{"run the self-test once", "delete " + ".github/workflows/aixgo-selftest.yml"} {
 		if !strings.Contains(output, want) {
 			t.Fatalf("next steps missing %q:\n%s", want, output)
 		}
@@ -314,7 +314,7 @@ exit 0
 		t.Fatalf("initCmd: %v", err)
 	}
 
-	workflowPath := filepath.Join(repoDir, ".github", "workflows", "simplycubed.yml")
+	workflowPath := filepath.Join(repoDir, ".github", "workflows", "aixgo.yml")
 	if _, err := os.Stat(workflowPath); !os.IsNotExist(err) {
 		t.Fatalf("workflow file should not exist, stat err = %v", err)
 	}
@@ -328,8 +328,8 @@ func TestInitWithWorkflowPreservesExistingWorkflow(t *testing.T) {
 		t.Skip("gh stub is a POSIX shell script")
 	}
 	repoDir := t.TempDir()
-	configPath := filepath.Join(repoDir, ".github", "simplycubed.yml")
-	workflowPath := filepath.Join(repoDir, ".github", "workflows", "simplycubed.yml")
+	configPath := filepath.Join(repoDir, ".github", "aixgo.yml")
+	workflowPath := filepath.Join(repoDir, ".github", "workflows", "aixgo.yml")
 	if err := os.MkdirAll(filepath.Dir(workflowPath), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -347,7 +347,7 @@ func TestInitWithWorkflowPreservesExistingWorkflow(t *testing.T) {
 	script := `#!/bin/sh
 printf '%s\n' "$*" >> "$GH_STUB_LOG"
 if [ "$1 $2" = "label list" ]; then
-  echo '[{"name":"sc:go"},{"name":"sc:queued"},{"name":"sc:working"},{"name":"sc:review"},{"name":"sc:blocked"},{"name":"sc:done"}]'
+  echo '[{"name":"ax:go"},{"name":"ax:queued"},{"name":"ax:working"},{"name":"ax:review"},{"name":"ax:blocked"},{"name":"ax:done"}]'
   exit 0
 fi
 exit 0
@@ -402,7 +402,7 @@ func TestWorkflowTemplateTag(t *testing.T) {
 func TestCallerWorkflowTemplateMatchesDocsTemplate(t *testing.T) {
 	t.Parallel()
 
-	want, err := os.ReadFile(filepath.Join("..", "..", "docs", "templates", "simplycubed-caller.yml"))
+	want, err := os.ReadFile(filepath.Join("..", "..", "docs", "templates", "aixgo-caller.yml"))
 	if err != nil {
 		t.Fatalf("read docs template: %v", err)
 	}
@@ -428,8 +428,8 @@ func buildVersionForTest(t *testing.T, version string) string {
 
 func TestEngineEnvValidatesEndpointAndKey(t *testing.T) {
 	set := func(endpoint, key string) {
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_ENDPOINT", endpoint)
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_API_KEY", key)
+		t.Setenv("AIXGO_AZURE_OPENAI_ENDPOINT", endpoint)
+		t.Setenv("AIXGO_AZURE_OPENAI_API_KEY", key)
 	}
 	// A trailing slash is normalized away, because the engine appends a path.
 	set("https://r.openai.azure.com/", "k")
@@ -454,8 +454,8 @@ func TestEngineEnvValidatesEndpointAndKey(t *testing.T) {
 }
 
 func TestEngineEnvSkipsAzureForClaude(t *testing.T) {
-	t.Setenv("SIMPLYCUBED_AZURE_OPENAI_ENDPOINT", "")
-	t.Setenv("SIMPLYCUBED_AZURE_OPENAI_API_KEY", "")
+	t.Setenv("AIXGO_AZURE_OPENAI_ENDPOINT", "")
+	t.Setenv("AIXGO_AZURE_OPENAI_API_KEY", "")
 	got, err := engineEnv(&config.Config{Engine: "claude"})
 	if err != nil || got != "" {
 		t.Fatalf("engineEnv(claude) = %q, %v", got, err)
@@ -464,8 +464,8 @@ func TestEngineEnvSkipsAzureForClaude(t *testing.T) {
 
 func TestPreflightCmd(t *testing.T) {
 	t.Run("reports ok when config and engine settings are present", func(t *testing.T) {
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_API_KEY", "k")
+		t.Setenv("AIXGO_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
+		t.Setenv("AIXGO_AZURE_OPENAI_API_KEY", "k")
 		var out bytes.Buffer
 		if err := preflightCmd([]string{"--repo-dir", repoWithConfigBody(t, "gate: make check\nappName: acme-code\n")}, &out); err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -476,8 +476,8 @@ func TestPreflightCmd(t *testing.T) {
 	})
 
 	t.Run("allows claude with no Azure settings", func(t *testing.T) {
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_ENDPOINT", "")
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_API_KEY", "")
+		t.Setenv("AIXGO_AZURE_OPENAI_ENDPOINT", "")
+		t.Setenv("AIXGO_AZURE_OPENAI_API_KEY", "")
 		var out bytes.Buffer
 		if err := preflightCmd([]string{"--repo-dir", repoWithConfigBody(t, "gate: make check\nengine: claude\nappName: acme-code\n")}, &out); err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -490,8 +490,8 @@ func TestPreflightCmd(t *testing.T) {
 	// The whole point of preflight is naming what is wrong, so each failure
 	// asserts the message identifies the thing the operator has to fix.
 	t.Run("names the missing config", func(t *testing.T) {
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_API_KEY", "k")
+		t.Setenv("AIXGO_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
+		t.Setenv("AIXGO_AZURE_OPENAI_API_KEY", "k")
 		err := preflightCmd([]string{"--repo-dir", t.TempDir()}, io.Discard)
 		if err == nil || !strings.Contains(err.Error(), "load config") {
 			t.Fatalf("err = %v, want a config error", err)
@@ -499,10 +499,10 @@ func TestPreflightCmd(t *testing.T) {
 	})
 
 	t.Run("names the missing endpoint", func(t *testing.T) {
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_ENDPOINT", "")
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_API_KEY", "k")
+		t.Setenv("AIXGO_AZURE_OPENAI_ENDPOINT", "")
+		t.Setenv("AIXGO_AZURE_OPENAI_API_KEY", "k")
 		err := preflightCmd([]string{"--repo-dir", repoWithConfigBody(t, "gate: make check\nappName: acme-code\n")}, io.Discard)
-		if err == nil || !strings.Contains(err.Error(), "SIMPLYCUBED_AZURE_OPENAI_ENDPOINT") {
+		if err == nil || !strings.Contains(err.Error(), "AIXGO_AZURE_OPENAI_ENDPOINT") {
 			t.Fatalf("err = %v, want the endpoint named", err)
 		}
 	})
@@ -517,8 +517,8 @@ func TestPreflightCmd(t *testing.T) {
 func TestEngineEnvRejectsAnUnparseableEndpoint(t *testing.T) {
 	// A control character makes url.Parse itself fail, which is a different
 	// branch from the scheme and host checks.
-	t.Setenv("SIMPLYCUBED_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com/\x7f")
-	t.Setenv("SIMPLYCUBED_AZURE_OPENAI_API_KEY", "k")
+	t.Setenv("AIXGO_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com/\x7f")
+	t.Setenv("AIXGO_AZURE_OPENAI_API_KEY", "k")
 	if _, err := engineEnv(&config.Config{}); err == nil {
 		t.Fatal("expected an error for an unparseable endpoint")
 	}
@@ -585,8 +585,8 @@ func TestDispatch(t *testing.T) {
 	// operator reads out of a workflow log.
 	for _, cmd := range []string{"preflight", "run", "address"} {
 		t.Run(cmd+" reports failure on stderr and exits 1", func(t *testing.T) {
-			t.Setenv("SIMPLYCUBED_AZURE_OPENAI_ENDPOINT", "")
-			t.Setenv("SIMPLYCUBED_AZURE_OPENAI_API_KEY", "")
+			t.Setenv("AIXGO_AZURE_OPENAI_ENDPOINT", "")
+			t.Setenv("AIXGO_AZURE_OPENAI_API_KEY", "")
 			var out, errOut bytes.Buffer
 			// An empty directory has no config, so each command fails early.
 			code := dispatch([]string{cmd, "--repo-dir", t.TempDir()}, &out, &errOut)
@@ -602,13 +602,13 @@ func TestDispatch(t *testing.T) {
 
 func repoWithConfig(t *testing.T) string {
 	t.Helper()
-	return repoWithConfigBody(t, "gate: make check\nlabelPrefix: sc\nappName: acme-code\n")
+	return repoWithConfigBody(t, "gate: make check\nlabelPrefix: ax\nappName: acme-code\n")
 }
 
 func repoWithConfigBody(t *testing.T, body string) string {
 	t.Helper()
 	dir := t.TempDir()
-	path := filepath.Join(dir, ".github", "simplycubed.yml")
+	path := filepath.Join(dir, ".github", "aixgo.yml")
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -620,8 +620,8 @@ func repoWithConfigBody(t *testing.T, body string) string {
 
 func TestPrepare(t *testing.T) {
 	t.Run("builds the dependency graph and returns the positional arguments", func(t *testing.T) {
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_API_KEY", "k")
+		t.Setenv("AIXGO_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
+		t.Setenv("AIXGO_AZURE_OPENAI_API_KEY", "k")
 		repo := repoWithConfig(t)
 		c, rest, err := prepare("run", []string{"--repo-dir", repo, "--state-dir", t.TempDir(), "o/r#1"})
 		if err != nil {
@@ -641,25 +641,25 @@ func TestPrepare(t *testing.T) {
 	// prepare is the common entry path, so each way the environment is wrong
 	// has to stop here rather than surface later as an engine failure.
 	t.Run("refuses a repo with no config", func(t *testing.T) {
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_API_KEY", "k")
+		t.Setenv("AIXGO_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
+		t.Setenv("AIXGO_AZURE_OPENAI_API_KEY", "k")
 		if _, _, err := prepare("run", []string{"--repo-dir", t.TempDir()}); err == nil {
 			t.Fatal("expected an error for a repo with no config")
 		}
 	})
 
 	t.Run("refuses a missing engine key", func(t *testing.T) {
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_API_KEY", "")
+		t.Setenv("AIXGO_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
+		t.Setenv("AIXGO_AZURE_OPENAI_API_KEY", "")
 		_, _, err := prepare("run", []string{"--repo-dir", repoWithConfig(t)})
-		if err == nil || !strings.Contains(err.Error(), "SIMPLYCUBED_AZURE_OPENAI_API_KEY") {
+		if err == nil || !strings.Contains(err.Error(), "AIXGO_AZURE_OPENAI_API_KEY") {
 			t.Fatalf("err = %v, want the key named", err)
 		}
 	})
 
 	t.Run("allows claude with no Azure settings and skips codex config", func(t *testing.T) {
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_ENDPOINT", "")
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_API_KEY", "")
+		t.Setenv("AIXGO_AZURE_OPENAI_ENDPOINT", "")
+		t.Setenv("AIXGO_AZURE_OPENAI_API_KEY", "")
 		stateDir := t.TempDir()
 		c, _, err := prepare("run", []string{"--repo-dir", repoWithConfigBody(t, "gate: make check\nengine: claude\nappName: acme-code\n"), "--state-dir", stateDir})
 		if err != nil {
@@ -682,8 +682,8 @@ func TestPrepare(t *testing.T) {
 	// --dry-run has to reach both the forge and the VCS, or a "dry" run would
 	// still push.
 	t.Run("dry-run wraps the forge and disables the push", func(t *testing.T) {
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_API_KEY", "k")
+		t.Setenv("AIXGO_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
+		t.Setenv("AIXGO_AZURE_OPENAI_API_KEY", "k")
 		c, _, err := prepare("run", []string{"--repo-dir", repoWithConfig(t), "--state-dir", t.TempDir(), "--dry-run"})
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -698,8 +698,8 @@ func TestPrepare(t *testing.T) {
 	})
 
 	t.Run("a normal run does neither", func(t *testing.T) {
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_API_KEY", "k")
+		t.Setenv("AIXGO_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
+		t.Setenv("AIXGO_AZURE_OPENAI_API_KEY", "k")
 		c, _, err := prepare("run", []string{"--repo-dir", repoWithConfig(t), "--state-dir", t.TempDir()})
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -758,7 +758,7 @@ func TestReportDryRun(t *testing.T) {
 	// reach the run summary or nobody reads it.
 	t.Run("prints the skipped writes and appends to the Actions summary", func(t *testing.T) {
 		d := dryrun.New(&forgefake.Forge{})
-		if _, err := d.OpenPR(context.Background(), "o/r", "sc/9", "Closes #9: t", "body"); err != nil {
+		if _, err := d.OpenPR(context.Background(), "o/r", "ax/9", "Closes #9: t", "body"); err != nil {
 			t.Fatal(err)
 		}
 		summary := filepath.Join(t.TempDir(), "summary.md")
@@ -774,7 +774,7 @@ func TestReportDryRun(t *testing.T) {
 		if err != nil {
 			t.Fatalf("summary not written: %v", err)
 		}
-		if !strings.Contains(string(b), "SimplyCubed Code dry run") || !strings.Contains(string(b), "open-pr") {
+		if !strings.Contains(string(b), "Aixgo Code dry run") || !strings.Contains(string(b), "open-pr") {
 			t.Fatalf("summary missing the report:\n%s", b)
 		}
 	})
@@ -811,7 +811,7 @@ func TestInitWithWorkflowIsIdempotent(t *testing.T) {
 	if err := initCmd([]string{"--repo-dir", repoDir, "--workflow", "--app-name", "acme-code"}, &first); err != nil {
 		t.Fatalf("first init: %v", err)
 	}
-	selftest := filepath.Join(repoDir, ".github", "workflows", "simplycubed-selftest.yml")
+	selftest := filepath.Join(repoDir, ".github", "workflows", "aixgo-selftest.yml")
 	if err := os.WriteFile(selftest, []byte("# edited by the adopter\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -976,8 +976,8 @@ func TestCommandCmdAnswersAVerbAimedAtTheWrongSurface(t *testing.T) {
 // directory with no config, so reaching the loop fails at config load - which
 // is how we know it was reached at all.
 func TestCommandCmdRoutesRecognisedVerbsToTheirLoops(t *testing.T) {
-	t.Setenv("SIMPLYCUBED_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
-	t.Setenv("SIMPLYCUBED_AZURE_OPENAI_API_KEY", "k")
+	t.Setenv("AIXGO_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
+	t.Setenv("AIXGO_AZURE_OPENAI_API_KEY", "k")
 
 	for name, body := range map[string]string{
 		"go routes to run":          "@acme-code go",
@@ -1041,7 +1041,7 @@ func TestNewRunnerHonoursTheSandboxOverride(t *testing.T) {
 	if r.Sandbox != "workspace-write" {
 		t.Fatalf("the sandbox must stay on by default, got %q", r.Sandbox)
 	}
-	t.Setenv("SIMPLYCUBED_SANDBOX", "read-only")
+	t.Setenv("AIXGO_SANDBOX", "read-only")
 	r2, _ := newRunner(&config.Config{}, t.TempDir()).(*codex.Runner)
 	if r2.Sandbox != "read-only" {
 		t.Fatalf("an explicit sandbox mode must be honoured, got %q", r2.Sandbox)
@@ -1054,8 +1054,8 @@ func TestNewVCSAttributesCommitsToTheCredential(t *testing.T) {
 	if v := newVCS(""); v.AuthorName != "" || v.AuthorEmail != "" {
 		t.Fatalf("a run with no known identity must not invent one: %+v", v)
 	}
-	v := newVCS("simplycubed-code[bot]")
-	if v.AuthorName != "simplycubed-code[bot]" {
+	v := newVCS("aixgo-code[bot]")
+	if v.AuthorName != "aixgo-code[bot]" {
 		t.Fatalf("AuthorName = %q", v.AuthorName)
 	}
 	if !strings.HasSuffix(v.AuthorEmail, "@users.noreply.github.com") || strings.Contains(v.AuthorEmail, "[bot]") {
@@ -1114,8 +1114,8 @@ func TestFetchIssue(t *testing.T) {
 }
 
 func TestRunAndAddressRequireARef(t *testing.T) {
-	t.Setenv("SIMPLYCUBED_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
-	t.Setenv("SIMPLYCUBED_AZURE_OPENAI_API_KEY", "k")
+	t.Setenv("AIXGO_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
+	t.Setenv("AIXGO_AZURE_OPENAI_API_KEY", "k")
 	repo := repoWithConfig(t)
 	for name, fn := range map[string]func([]string) error{"run": runCmd, "address": addressCmd} {
 		err := fn([]string{"--repo-dir", repo, "--state-dir", t.TempDir()})
@@ -1166,7 +1166,7 @@ func TestAnswerPathEdges(t *testing.T) {
 	})
 
 	t.Run("the dry-run environment variable is honoured", func(t *testing.T) {
-		t.Setenv("SIMPLYCUBED_DRY_RUN", "1")
+		t.Setenv("AIXGO_DRY_RUN", "1")
 		f := stubCommentForge(t, nil)
 		var out bytes.Buffer
 		if err := commandCmd([]string{"--body", "@acme-code address", "o/r#1", "--repo-dir", repoWithConfig(t)}, &out); err != nil {
@@ -1179,14 +1179,14 @@ func TestAnswerPathEdges(t *testing.T) {
 }
 
 // The workflow-file preflight used to compare the authenticated login against a
-// hardcoded "simplycubed-code[bot]". Every adopter's App carries a different
+// hardcoded "aixgo-code[bot]". Every adopter's App carries a different
 // name, because GitHub App names are globally unique, so the comparison was
 // false for everyone but us and the preflight never ran where it was needed.
 func TestWorkflowRestrictedPushCoversAnyBotIdentity(t *testing.T) {
 	t.Run("an adopter's own bot is restricted", func(t *testing.T) {
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_API_KEY", "k")
-		t.Setenv("SIMPLYCUBED_GH_APP_LOGIN", "acme-code[bot]")
+		t.Setenv("AIXGO_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
+		t.Setenv("AIXGO_AZURE_OPENAI_API_KEY", "k")
+		t.Setenv("AIXGO_GH_APP_LOGIN", "acme-code[bot]")
 		c, _, err := prepare("run", []string{"--repo-dir", repoWithConfig(t), "--state-dir", t.TempDir(), "o/r#1"})
 		if err != nil {
 			t.Fatalf("prepare: %v", err)
@@ -1200,9 +1200,9 @@ func TestWorkflowRestrictedPushCoversAnyBotIdentity(t *testing.T) {
 	})
 
 	t.Run("a human running locally is not restricted", func(t *testing.T) {
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_API_KEY", "k")
-		t.Setenv("SIMPLYCUBED_GH_APP_LOGIN", "")
+		t.Setenv("AIXGO_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
+		t.Setenv("AIXGO_AZURE_OPENAI_API_KEY", "k")
+		t.Setenv("AIXGO_GH_APP_LOGIN", "")
 		c, _, err := prepare("run", []string{"--repo-dir", repoWithConfig(t), "--state-dir", t.TempDir(), "o/r#1"})
 		if err != nil {
 			t.Fatalf("prepare: %v", err)
@@ -1219,19 +1219,19 @@ func TestWorkflowRestrictedPushCoversAnyBotIdentity(t *testing.T) {
 func TestPreflightChecksTheAdopterSetValues(t *testing.T) {
 	setAll := func(t *testing.T) {
 		t.Helper()
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_API_KEY", "k")
-		t.Setenv("SIMPLYCUBED_GH_APP_CLIENT_ID", "Iv23example")
-		t.Setenv("SIMPLYCUBED_GH_APP_PRIVATE_KEY", "-----BEGIN...")
+		t.Setenv("AIXGO_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
+		t.Setenv("AIXGO_AZURE_OPENAI_API_KEY", "k")
+		t.Setenv("AIXGO_GH_APP_CLIENT_ID", "Iv23example")
+		t.Setenv("AIXGO_GH_APP_PRIVATE_KEY", "-----BEGIN...")
 	}
 
 	for _, tc := range []struct {
 		name, unset, wantSection string
 	}{
-		{"endpoint", "SIMPLYCUBED_AZURE_OPENAI_ENDPOINT", "repository variable"},
-		{"api key", "SIMPLYCUBED_AZURE_OPENAI_API_KEY", "repository secret"},
-		{"client id", "SIMPLYCUBED_GH_APP_CLIENT_ID", "repository variable"},
-		{"private key", "SIMPLYCUBED_GH_APP_PRIVATE_KEY", "repository secret"},
+		{"endpoint", "AIXGO_AZURE_OPENAI_ENDPOINT", "repository variable"},
+		{"api key", "AIXGO_AZURE_OPENAI_API_KEY", "repository secret"},
+		{"client id", "AIXGO_GH_APP_CLIENT_ID", "repository variable"},
+		{"private key", "AIXGO_GH_APP_PRIVATE_KEY", "repository secret"},
 	} {
 		t.Run(tc.name+" missing names its section", func(t *testing.T) {
 			setAll(t)
@@ -1253,7 +1253,7 @@ func TestPreflightChecksTheAdopterSetValues(t *testing.T) {
 
 	t.Run("a value filed on the wrong tab looks empty and fails the same way", func(t *testing.T) {
 		setAll(t)
-		t.Setenv("SIMPLYCUBED_GH_APP_CLIENT_ID", "   ")
+		t.Setenv("AIXGO_GH_APP_CLIENT_ID", "   ")
 		err := preflightCmd([]string{"--repo-dir", repoWithConfig(t), "--actions"}, io.Discard)
 		if !errors.Is(err, ErrConfigMissing) {
 			t.Fatalf("err = %v, want a whitespace-only value treated as unset", err)
@@ -1262,8 +1262,8 @@ func TestPreflightChecksTheAdopterSetValues(t *testing.T) {
 
 	t.Run("a local run does not require the App pair", func(t *testing.T) {
 		setAll(t)
-		t.Setenv("SIMPLYCUBED_GH_APP_CLIENT_ID", "")
-		t.Setenv("SIMPLYCUBED_GH_APP_PRIVATE_KEY", "")
+		t.Setenv("AIXGO_GH_APP_CLIENT_ID", "")
+		t.Setenv("AIXGO_GH_APP_PRIVATE_KEY", "")
 		if err := preflightCmd([]string{"--repo-dir", repoWithConfig(t)}, io.Discard); err != nil {
 			t.Fatalf("a local run authenticates as the operator and never uses the App: %v", err)
 		}
@@ -1271,7 +1271,7 @@ func TestPreflightChecksTheAdopterSetValues(t *testing.T) {
 
 	t.Run("a configuration miss exits 3, not 1", func(t *testing.T) {
 		setAll(t)
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_API_KEY", "")
+		t.Setenv("AIXGO_AZURE_OPENAI_API_KEY", "")
 		var out, errOut bytes.Buffer
 		if code := dispatch([]string{"preflight", "--repo-dir", repoWithConfig(t)}, &out, &errOut); code != 3 {
 			t.Fatalf("exit = %d, want 3 so a caller can tell a missing value from a bug", code)
@@ -1286,14 +1286,14 @@ func TestPreflightCatchesHandleDrift(t *testing.T) {
 	repoWith := func(t *testing.T, appName, trigger string) string {
 		t.Helper()
 		dir := repoWithConfigBody(t, "gate: make check\nappName: "+appName+"\n")
-		wf := filepath.Join(dir, ".github", "workflows", "simplycubed.yml")
+		wf := filepath.Join(dir, ".github", "workflows", "aixgo.yml")
 		if err := os.MkdirAll(filepath.Dir(wf), 0o755); err != nil {
 			t.Fatal(err)
 		}
 		// Must look like a caller: the check finds it by the reusable-workflow
 		// call, not by filename.
 		body := "on: [issue_comment]\njobs:\n  comment:\n" +
-			"    uses: simplycubed/code/.github/workflows/simplycubed.yml@v0.3.0\n" +
+			"    uses: aixgo-dev/code/.github/workflows/aixgo.yml@v0.3.0\n" +
 			"    if: startsWith(github.event.comment.body, '" + trigger + "')\n"
 		if err := os.WriteFile(wf, []byte(body), 0o644); err != nil {
 			t.Fatal(err)
@@ -1302,8 +1302,8 @@ func TestPreflightCatchesHandleDrift(t *testing.T) {
 	}
 	setAzure := func(t *testing.T) {
 		t.Helper()
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_API_KEY", "k")
+		t.Setenv("AIXGO_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
+		t.Setenv("AIXGO_AZURE_OPENAI_API_KEY", "k")
 	}
 
 	t.Run("agreeing is fine", func(t *testing.T) {
@@ -1422,13 +1422,13 @@ func TestCommandCmdSurfacesConfigProblems(t *testing.T) {
 	}
 }
 
-// init writes the caller as simplycubed.yml, but an adopter can rename it, and
+// init writes the caller as aixgo.yml, but an adopter can rename it, and
 // in this repository that name belongs to the reusable workflow itself. The
 // drift check has to find the caller by what it calls, or it passes on the
 // wrong file and fails on a valid install.
 func TestDriftCheckFindsTheCallerByContentNotFilename(t *testing.T) {
-	t.Setenv("SIMPLYCUBED_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
-	t.Setenv("SIMPLYCUBED_AZURE_OPENAI_API_KEY", "k")
+	t.Setenv("AIXGO_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
+	t.Setenv("AIXGO_AZURE_OPENAI_API_KEY", "k")
 
 	dir := repoWithConfigBody(t, "gate: make check\nappName: acme-code\n")
 	wfDir := filepath.Join(dir, ".github", "workflows")
@@ -1436,14 +1436,14 @@ func TestDriftCheckFindsTheCallerByContentNotFilename(t *testing.T) {
 		t.Fatal(err)
 	}
 	// A workflow with the canonical name that is not a caller must be ignored.
-	if err := os.WriteFile(filepath.Join(wfDir, "simplycubed.yml"), []byte("on: workflow_call\njobs:\n  run:\n    runs-on: ubuntu-latest\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(wfDir, "aixgo.yml"), []byte("on: workflow_call\njobs:\n  run:\n    runs-on: ubuntu-latest\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	// The real caller, under a different name.
 	caller := "on: [issue_comment]\njobs:\n  comment:\n" +
-		"    uses: simplycubed/code/.github/workflows/simplycubed.yml@v0.3.0\n" +
+		"    uses: aixgo-dev/code/.github/workflows/aixgo.yml@v0.3.0\n" +
 		"    if: startsWith(github.event.comment.body, '@acme-code')\n"
-	if err := os.WriteFile(filepath.Join(wfDir, "simplycubed-caller.yml"), []byte(caller), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(wfDir, "aixgo-caller.yml"), []byte(caller), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1459,8 +1459,8 @@ func TestDriftCheckFindsTheCallerByContentNotFilename(t *testing.T) {
 func TestDriftCheckSkipsWhatIsNotACaller(t *testing.T) {
 	setAzure := func(t *testing.T) {
 		t.Helper()
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
-		t.Setenv("SIMPLYCUBED_AZURE_OPENAI_API_KEY", "k")
+		t.Setenv("AIXGO_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
+		t.Setenv("AIXGO_AZURE_OPENAI_API_KEY", "k")
 	}
 	repoWithWorkflows := func(t *testing.T, files map[string]string, dirs ...string) string {
 		t.Helper()
@@ -1483,7 +1483,7 @@ func TestDriftCheckSkipsWhatIsNotACaller(t *testing.T) {
 	}
 	caller := func(trigger string) string {
 		return "on: [issue_comment]\njobs:\n  comment:\n" +
-			"    uses: simplycubed/code/.github/workflows/simplycubed.yml@v0.3.0\n" +
+			"    uses: aixgo-dev/code/.github/workflows/aixgo.yml@v0.3.0\n" +
 			"    if: startsWith(github.event.comment.body, '" + trigger + "')\n"
 	}
 	plain := "on: push\njobs:\n  build:\n    runs-on: ubuntu-latest\n"
