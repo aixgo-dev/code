@@ -9,14 +9,14 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/simplycubed/code/internal/attribution"
-	"github.com/simplycubed/code/internal/domain"
-	"github.com/simplycubed/code/internal/engine"
-	"github.com/simplycubed/code/internal/forge"
-	"github.com/simplycubed/code/internal/gate"
-	"github.com/simplycubed/code/internal/ledger"
-	"github.com/simplycubed/code/internal/state"
-	"github.com/simplycubed/code/internal/verdict"
+	"github.com/aixgo-dev/code/internal/attribution"
+	"github.com/aixgo-dev/code/internal/domain"
+	"github.com/aixgo-dev/code/internal/engine"
+	"github.com/aixgo-dev/code/internal/forge"
+	"github.com/aixgo-dev/code/internal/gate"
+	"github.com/aixgo-dev/code/internal/ledger"
+	"github.com/aixgo-dev/code/internal/state"
+	"github.com/aixgo-dev/code/internal/verdict"
 )
 
 // Outcome is how a run ended.
@@ -43,10 +43,10 @@ type GateFunc func(ctx context.Context, workDir string) gate.Result
 type Config struct {
 	WorkDir     string
 	Branch      string
-	LabelPrefix string // default "sc"
+	LabelPrefix string // default "ax"
 	MaxRounds   int    // hard cap on act/grade rounds; default 4
 	RunID       string // used in ledger events
-	// WorkflowRestrictedPush marks runs authenticated as the SimplyCubed GitHub
+	// WorkflowRestrictedPush marks runs authenticated as the Aixgo GitHub
 	// App, whose installation token deliberately lacks `workflows` permission.
 	// When such a run edits `.github/workflows/`, GitHub refuses the push.
 	WorkflowRestrictedPush bool
@@ -54,7 +54,7 @@ type Config struct {
 	// SelfLogin is the authenticated identity, used to name it in an
 	// escalation. Empty when the run is a human under their own credential.
 	SelfLogin string
-	// Attribute stamps generated commits and pull requests with a SimplyCubed
+	// Attribute stamps generated commits and pull requests with a Aixgo
 	// Code marker. The app wires this from the repo config (on by default).
 	Attribute bool
 }
@@ -222,7 +222,7 @@ type Result struct {
 func (e *Engine) Run(ctx context.Context, iss domain.Issue) (Result, error) {
 	prefix := e.Cfg.LabelPrefix
 	if prefix == "" {
-		prefix = "sc"
+		prefix = "ax"
 	}
 	maxRounds := e.Cfg.MaxRounds
 	if maxRounds <= 0 {
@@ -302,7 +302,7 @@ type FixRequest struct {
 func (e *Engine) Fix(ctx context.Context, req FixRequest) (Result, error) {
 	prefix := e.Cfg.LabelPrefix
 	if prefix == "" {
-		prefix = "sc"
+		prefix = "ax"
 	}
 	maxRounds := e.Cfg.MaxRounds
 	if maxRounds <= 0 {

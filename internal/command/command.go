@@ -123,7 +123,7 @@ func MisdirectedText(k Kind, onPullRequest bool, appName string) string {
 	}
 	if k == Address && !onPullRequest {
 		return "`address` reads the human review feedback on a pull request, and this is an issue, so there is no review to read.\n\n" +
-			"To start work on it, comment `" + m + " go` or apply the `sc:go` label."
+			"To start work on it, comment `" + m + " go` or apply the `ax:go` label."
 	}
 	return ""
 }

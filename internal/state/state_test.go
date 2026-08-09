@@ -3,10 +3,10 @@ package state
 import "testing"
 
 func TestLabelRendering(t *testing.T) {
-	if got := Label("sc", Working); got != "sc:working" {
-		t.Fatalf("Label = %q want sc:working", got)
+	if got := Label("ax", Working); got != "ax:working" {
+		t.Fatalf("Label = %q want ax:working", got)
 	}
-	if got := Label("simplycubed", Go); got != "simplycubed:go" {
+	if got := Label("aixgo", Go); got != "aixgo:go" {
 		t.Fatalf("Label = %q", got)
 	}
 }

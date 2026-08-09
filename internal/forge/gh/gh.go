@@ -16,7 +16,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/simplycubed/code/internal/domain"
+	"github.com/aixgo-dev/code/internal/domain"
 )
 
 // Forge drives GitHub via the gh CLI.
@@ -27,11 +27,11 @@ type Forge struct {
 	// process directory.
 	Dir string
 	// StateLabels is the full set of mutually-exclusive state labels (for example
-	// "sc:go", "sc:queued", ... "sc:done"). SetState removes every one of these
+	// "ax:go", "ax:queued", ... "ax:done"). SetState removes every one of these
 	// other than the label being set, so exactly one state label remains on the
 	// issue. GitHub does not enforce that; this does.
 	StateLabels []string
-	// Self is the agent's own GitHub login (for example "simplycubed-code[bot]").
+	// Self is the agent's own GitHub login (for example "aixgo-code[bot]").
 	// When set, review feedback authored by it is excluded from Feedback, so the
 	// fixer never treats the agent's own output as work to do. Empty disables the
 	// author filter (used for local runs); freshness still bounds the result.

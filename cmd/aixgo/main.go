@@ -1,8 +1,8 @@
-// Command simplycubed is the CLI for SimplyCubed Code. It runs the same engine
+// Command aixgo is the CLI for Aixgo Code. It runs the same engine
 // the GitHub Action runs, locally, for development and debugging.
 //
-//	simplycubed version
-//	simplycubed run <owner/repo#N> [flags]
+//	aixgo version
+//	aixgo run <owner/repo#N> [flags]
 //
 // This is an early scaffold. See STATUS.md.
 package main
@@ -22,20 +22,20 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/simplycubed/code/internal/app"
-	"github.com/simplycubed/code/internal/buildinfo"
-	"github.com/simplycubed/code/internal/command"
-	"github.com/simplycubed/code/internal/config"
-	"github.com/simplycubed/code/internal/domain"
-	"github.com/simplycubed/code/internal/engine"
-	"github.com/simplycubed/code/internal/engine/claude"
-	"github.com/simplycubed/code/internal/engine/codex"
-	forge2 "github.com/simplycubed/code/internal/forge"
-	"github.com/simplycubed/code/internal/forge/dryrun"
-	forgegh "github.com/simplycubed/code/internal/forge/gh"
-	"github.com/simplycubed/code/internal/loop"
-	vcsgit "github.com/simplycubed/code/internal/vcs/git"
-	"github.com/simplycubed/code/internal/worktree"
+	"github.com/aixgo-dev/code/internal/app"
+	"github.com/aixgo-dev/code/internal/buildinfo"
+	"github.com/aixgo-dev/code/internal/command"
+	"github.com/aixgo-dev/code/internal/config"
+	"github.com/aixgo-dev/code/internal/domain"
+	"github.com/aixgo-dev/code/internal/engine"
+	"github.com/aixgo-dev/code/internal/engine/claude"
+	"github.com/aixgo-dev/code/internal/engine/codex"
+	forge2 "github.com/aixgo-dev/code/internal/forge"
+	"github.com/aixgo-dev/code/internal/forge/dryrun"
+	forgegh "github.com/aixgo-dev/code/internal/forge/gh"
+	"github.com/aixgo-dev/code/internal/loop"
+	vcsgit "github.com/aixgo-dev/code/internal/vcs/git"
+	"github.com/aixgo-dev/code/internal/worktree"
 )
 
 func main() {
@@ -92,15 +92,15 @@ func dispatch(args []string, stdout, stderr io.Writer) int {
 }
 
 func usage(w io.Writer) {
-	fmt.Fprintf(w, `simplycubed %s
+	fmt.Fprintf(w, `aixgo %s
 
 usage:
-  simplycubed version
-  simplycubed init [--repo-dir .] [--workflow]
-  simplycubed preflight [--repo-dir .]
-  simplycubed command <owner/repo#N> --body "<comment>" [flags]
-  simplycubed run <owner/repo#N> [flags]
-  simplycubed address <owner/repo#PR> [flags]
+  aixgo version
+  aixgo init [--repo-dir .] [--workflow]
+  aixgo preflight [--repo-dir .]
+  aixgo command <owner/repo#N> --body "<comment>" [flags]
+  aixgo run <owner/repo#N> [flags]
+  aixgo address <owner/repo#PR> [flags]
 
 run drives an issue to a pull request. address runs the fix-on-request loop
 over an open pull request: it reads the human's review feedback and pushes a
@@ -115,26 +115,26 @@ flags (both commands):
   --state-dir   where worktrees and the generated config live
 
 environment (engine settings; never committed to a repo):
-  SIMPLYCUBED_AZURE_OPENAI_ENDPOINT   e.g. https://<resource>.openai.azure.com
-  SIMPLYCUBED_AZURE_OPENAI_API_KEY    the key, read by name and never written to disk
+  AIXGO_AZURE_OPENAI_ENDPOINT   e.g. https://<resource>.openai.azure.com
+  AIXGO_AZURE_OPENAI_API_KEY    the key, read by name and never written to disk
 `, buildinfo.Version)
 }
 
-const starterConfig = `# Repository-local contract for SimplyCubed Code.
-# Keep the label prefix unless you already run another sc:* lifecycle.
-labelPrefix: sc
+const starterConfig = `# Repository-local contract for Aixgo Code.
+# Keep the label prefix unless you already run another ax:* lifecycle.
+labelPrefix: ax
 
 # The GitHub App you created and installed, without the "[bot]" suffix. Comment
-# commands address it: "@__SIMPLYCUBED_APP_NAME__ go" on an issue starts work.
+# commands address it: "@__AIXGO_APP_NAME__ go" on an issue starts work.
 #
 # This is yours, not ours. App names are globally unique, so every installation
 # has a different one, and addressing your real bot is what makes GitHub offer
 # it in the autocomplete after someone types "@".
 #
 # The caller workflow triggers on this same handle. If you rename the App,
-# change it here and re-run "simplycubed init --workflow"; preflight fails if
+# change it here and re-run "aixgo init --workflow"; preflight fails if
 # the two ever disagree.
-appName: __SIMPLYCUBED_APP_NAME__
+appName: __AIXGO_APP_NAME__
 
 # Required. Fill this in with the real gate that is already green on main.
 gate:
@@ -150,15 +150,15 @@ gate:
 `
 
 const (
-	latestKnownWorkflowTag     = "v0.3.0"
-	callerWorkflowTagToken     = "__SIMPLYCUBED_TAG__"
-	callerWorkflowAppNameToken = "__SIMPLYCUBED_APP_NAME__"
+	latestKnownWorkflowTag     = "v0.4.0"
+	callerWorkflowTagToken     = "__AIXGO_TAG__"
+	callerWorkflowAppNameToken = "__AIXGO_APP_NAME__"
 )
 
-//go:embed simplycubed-caller.yml.tmpl
+//go:embed aixgo-caller.yml.tmpl
 var callerWorkflowTemplate string
 
-//go:embed simplycubed-selftest.yml.tmpl
+//go:embed aixgo-selftest.yml.tmpl
 var selftestWorkflowTemplate string
 
 // engineEnv validates the selected engine settings and returns the normalized
@@ -169,18 +169,18 @@ func engineEnv(cfg *config.Config) (string, error) {
 	if cfg != nil && cfg.Engine == "claude" {
 		return "", nil
 	}
-	if err := requireSet("SIMPLYCUBED_AZURE_OPENAI_ENDPOINT", sectionVariable); err != nil {
+	if err := requireSet("AIXGO_AZURE_OPENAI_ENDPOINT", sectionVariable); err != nil {
 		return "", err
 	}
-	endpoint := strings.TrimRight(os.Getenv("SIMPLYCUBED_AZURE_OPENAI_ENDPOINT"), "/")
+	endpoint := strings.TrimRight(os.Getenv("AIXGO_AZURE_OPENAI_ENDPOINT"), "/")
 	u, err := url.Parse(endpoint)
 	if err != nil {
-		return "", fmt.Errorf("SIMPLYCUBED_AZURE_OPENAI_ENDPOINT is not a valid URL: %w", err)
+		return "", fmt.Errorf("AIXGO_AZURE_OPENAI_ENDPOINT is not a valid URL: %w", err)
 	}
 	if u.Scheme != "https" || u.Host == "" {
-		return "", fmt.Errorf("SIMPLYCUBED_AZURE_OPENAI_ENDPOINT must be an https URL like https://<resource>.openai.azure.com, got %q", endpoint)
+		return "", fmt.Errorf("AIXGO_AZURE_OPENAI_ENDPOINT must be an https URL like https://<resource>.openai.azure.com, got %q", endpoint)
 	}
-	if err := requireSet("SIMPLYCUBED_AZURE_OPENAI_API_KEY", sectionSecret); err != nil {
+	if err := requireSet("AIXGO_AZURE_OPENAI_API_KEY", sectionSecret); err != nil {
 		return "", err
 	}
 	return endpoint, nil
@@ -215,7 +215,7 @@ func requireSet(name string, where section) error {
 	if strings.TrimSpace(os.Getenv(name)) != "" {
 		return nil
 	}
-	return fmt.Errorf("%w: %s is not set. It is a repository %s on your own repository, under Settings > Secrets and variables > Actions; a reusable workflow never inherits %ss from SimplyCubed", ErrConfigMissing, name, where, where)
+	return fmt.Errorf("%w: %s is not set. It is a repository %s on your own repository, under Settings > Secrets and variables > Actions; a reusable workflow never inherits %ss from Aixgo", ErrConfigMissing, name, where, where)
 }
 
 func newVCS(self string) *vcsgit.Git {
@@ -228,7 +228,7 @@ func newVCS(self string) *vcsgit.Git {
 	}
 }
 
-// newRunner builds the engine runner, honouring SIMPLYCUBED_SANDBOX.
+// newRunner builds the engine runner, honouring AIXGO_SANDBOX.
 //
 // The sandbox stays on. Nothing in this repository widens it, and the knob
 // exists only so an adopter who has genuinely sandboxed their runners
@@ -251,7 +251,7 @@ func newRunner(cfg *config.Config, codexHome string) engine.Runner {
 		return claude.New()
 	}
 	r := codex.New(codexHome)
-	if mode := os.Getenv("SIMPLYCUBED_SANDBOX"); mode != "" {
+	if mode := os.Getenv("AIXGO_SANDBOX"); mode != "" {
 		r.Sandbox = mode
 	}
 	return r
@@ -295,7 +295,7 @@ func appNameFor(argv []string) (string, error) {
 			repoDir = v
 		}
 	}
-	cfg, err := config.Load(filepath.Join(repoDir, ".github", "simplycubed.yml"))
+	cfg, err := config.Load(filepath.Join(repoDir, ".github", "aixgo.yml"))
 	if err != nil {
 		return "", fmt.Errorf("load config: %w", err)
 	}
@@ -328,7 +328,7 @@ func commandCmd(argv []string, stdout io.Writer) error {
 	case command.Go, command.Address:
 		// A verb aimed at the wrong surface is answered, not run. This lives on
 		// the comment path rather than inside run and address because someone
-		// typing `simplycubed address owner/repo#96` at a shell wants an error,
+		// typing `aixgo address owner/repo#96` at a shell wants an error,
 		// not a comment posted in their name.
 		a, err := newAnswerer(rest)
 		if err != nil {
@@ -426,7 +426,7 @@ func (a answerer) post(body string, stdout io.Writer) error {
 // dryRunRequested reads the flag without owning it. run and address define the
 // real flag set; this only needs to know whether to record instead of post.
 func dryRunRequested(argv []string) bool {
-	if os.Getenv("SIMPLYCUBED_DRY_RUN") != "" {
+	if os.Getenv("AIXGO_DRY_RUN") != "" {
 		return true
 	}
 	for _, arg := range argv {
@@ -460,7 +460,7 @@ func reply(argv []string, body string, stdout io.Writer) error {
 // on every run rather than left to be discovered.
 func checkMentionAgreement(repoDir, appName string) error {
 	// Find the caller by what it does, not by what it is called. init writes
-	// .github/workflows/simplycubed.yml, but an adopter can rename it, and in
+	// .github/workflows/aixgo.yml, but an adopter can rename it, and in
 	// this repository that name belongs to the reusable workflow itself. A check
 	// keyed on the filename would pass on the wrong file, or fail on a valid
 	// install, which is worse than not checking.
@@ -478,7 +478,7 @@ func checkMentionAgreement(repoDir, appName string) error {
 		}
 		path := filepath.Join(dir, e.Name())
 		b, err := os.ReadFile(path)
-		if err != nil || !strings.Contains(string(b), "simplycubed/code/.github/workflows/simplycubed.yml@") {
+		if err != nil || !strings.Contains(string(b), "aixgo-dev/code/.github/workflows/aixgo.yml@") {
 			continue
 		}
 		callers = append(callers, path)
@@ -489,7 +489,7 @@ func checkMentionAgreement(repoDir, appName string) error {
 	if len(callers) == 0 {
 		return nil
 	}
-	return fmt.Errorf("%w: .github/simplycubed.yml sets appName %q, but %s does not trigger on %s. Comment commands will never fire. Re-run \"simplycubed init --workflow\" to rewrite the trigger from the config",
+	return fmt.Errorf("%w: .github/aixgo.yml sets appName %q, but %s does not trigger on %s. Comment commands will never fire. Re-run \"aixgo init --workflow\" to rewrite the trigger from the config",
 		ErrConfigMissing, appName, strings.Join(callers, ", "), want)
 }
 
@@ -500,7 +500,7 @@ func preflightCmd(argv []string, stdout io.Writer) error {
 	if _, err := parseInterleaved(fs, argv); err != nil {
 		return err
 	}
-	cfg, err := config.Load(filepath.Join(*repoDir, ".github", "simplycubed.yml"))
+	cfg, err := config.Load(filepath.Join(*repoDir, ".github", "aixgo.yml"))
 	if err != nil {
 		return fmt.Errorf("load config: %w", err)
 	}
@@ -508,7 +508,7 @@ func preflightCmd(argv []string, stdout io.Writer) error {
 		return err
 	}
 	if cfg.AppName == "" {
-		return fmt.Errorf("%w: .github/simplycubed.yml sets no appName. Comment commands address the App you installed, so without it none of them can fire. Add \"appName: <your-app>\" or re-run \"simplycubed init --workflow --app-name <your-app>\"", ErrConfigMissing)
+		return fmt.Errorf("%w: .github/aixgo.yml sets no appName. Comment commands address the App you installed, so without it none of them can fire. Add \"appName: <your-app>\" or re-run \"aixgo init --workflow --app-name <your-app>\"", ErrConfigMissing)
 	}
 	if err := checkMentionAgreement(*repoDir, cfg.AppName); err != nil {
 		return err
@@ -521,8 +521,8 @@ func preflightCmd(argv []string, stdout io.Writer) error {
 			name  string
 			where section
 		}{
-			{"SIMPLYCUBED_GH_APP_CLIENT_ID", sectionVariable},
-			{"SIMPLYCUBED_GH_APP_PRIVATE_KEY", sectionSecret},
+			{"AIXGO_GH_APP_CLIENT_ID", sectionVariable},
+			{"AIXGO_GH_APP_PRIVATE_KEY", sectionSecret},
 		} {
 			if err := requireSet(v.name, v.where); err != nil {
 				return err
@@ -583,7 +583,7 @@ func prepare(name string, argv []string) (*commonFlags, []string, error) {
 	repoDir := fs.String("repo-dir", ".", "path to the target repo checkout")
 	model := fs.String("model", "gpt-5.4", "engine model/deployment name")
 	base := fs.String("base", "origin/HEAD", "worktree base ref")
-	stateDir := fs.String("state-dir", filepath.Join(os.TempDir(), "simplycubed"), "state directory")
+	stateDir := fs.String("state-dir", filepath.Join(os.TempDir(), "aixgo"), "state directory")
 	actor := fs.String("actor", "", "login that triggered this run; checked for write access")
 	dryRun := fs.Bool("dry-run", false, "run the whole loop but make no GitHub writes and no push")
 	rest, err := parseInterleaved(fs, argv)
@@ -591,7 +591,7 @@ func prepare(name string, argv []string) (*commonFlags, []string, error) {
 		return nil, nil, err
 	}
 
-	cfg, err := config.Load(filepath.Join(*repoDir, ".github", "simplycubed.yml"))
+	cfg, err := config.Load(filepath.Join(*repoDir, ".github", "aixgo.yml"))
 	if err != nil {
 		return nil, nil, fmt.Errorf("load config: %w", err)
 	}
@@ -606,7 +606,7 @@ func prepare(name string, argv []string) (*commonFlags, []string, error) {
 		if _, err := codex.WriteConfig(codexHome, codex.ProviderConfig{
 			Model:   *model,
 			BaseURL: endpoint + "/openai/v1",
-			EnvKey:  "SIMPLYCUBED_AZURE_OPENAI_API_KEY",
+			EnvKey:  "AIXGO_AZURE_OPENAI_API_KEY",
 		}); err != nil {
 			return nil, nil, fmt.Errorf("write codex config: %w", err)
 		}
@@ -617,8 +617,8 @@ func prepare(name string, argv []string) (*commonFlags, []string, error) {
 		prefix = config.DefaultLabelPrefix
 	}
 
-	forge := &forgegh.Forge{StateLabels: app.StateLabels(prefix), Self: os.Getenv("SIMPLYCUBED_GH_APP_LOGIN")}
-	dry := *dryRun || os.Getenv("SIMPLYCUBED_DRY_RUN") != ""
+	forge := &forgegh.Forge{StateLabels: app.StateLabels(prefix), Self: os.Getenv("AIXGO_GH_APP_LOGIN")}
+	dry := *dryRun || os.Getenv("AIXGO_DRY_RUN") != ""
 	// When the caller did not name the identity, ask the credential who it is.
 	// The workflow used to do this with a gh graphql call and hand the answer
 	// back in an environment variable; the product can just look.
@@ -666,7 +666,7 @@ func reportDryRun(c *commonFlags, w io.Writer) {
 			return
 		}
 		defer f.Close()
-		fmt.Fprintf(f, "## SimplyCubed Code dry run\n\n```\n%s\n```\n", report)
+		fmt.Fprintf(f, "## Aixgo Code dry run\n\n```\n%s\n```\n", report)
 	}
 }
 
@@ -753,13 +753,13 @@ func initCmd(argv []string, stdout io.Writer) error {
 		return err
 	}
 
-	configPath := filepath.Join(*repoDir, ".github", "simplycubed.yml")
+	configPath := filepath.Join(*repoDir, ".github", "aixgo.yml")
 	wroteConfig, err := writeStarterConfig(configPath, appName)
 	if err != nil {
 		return err
 	}
-	workflowPath := filepath.Join(*repoDir, ".github", "workflows", "simplycubed.yml")
-	selftestPath := filepath.Join(*repoDir, ".github", "workflows", "simplycubed-selftest.yml")
+	workflowPath := filepath.Join(*repoDir, ".github", "workflows", "aixgo.yml")
+	selftestPath := filepath.Join(*repoDir, ".github", "workflows", "aixgo-selftest.yml")
 	wroteWorkflow := false
 	wroteSelftest := false
 	if *writeWorkflow {
@@ -829,20 +829,20 @@ func initCmd(argv []string, stdout io.Writer) error {
 	fmt.Fprintln(stdout, "     shows it once. Note the Client ID there too, the Iv23 string.")
 	fmt.Fprintln(stdout, "  3. Install the App on this repository, from Install App on the same page.")
 	fmt.Fprintln(stdout, "     Reference: https://docs.github.com/apps/creating-github-apps")
-	fmt.Fprintln(stdout, "  - write the real gate in .github/simplycubed.yml")
+	fmt.Fprintln(stdout, "  - write the real gate in .github/aixgo.yml")
 	fmt.Fprintln(stdout, "  - verify that gate is green on your main branch")
 	fmt.Fprintln(stdout, "  - add two repository VARIABLES, under Settings > Secrets and variables > Actions > Variables:")
-	fmt.Fprintln(stdout, "      SIMPLYCUBED_GH_APP_CLIENT_ID       the App Client ID, the Iv23 string on the App settings page")
-	fmt.Fprintln(stdout, "      SIMPLYCUBED_AZURE_OPENAI_ENDPOINT  e.g. https://<resource>.openai.azure.com")
+	fmt.Fprintln(stdout, "      AIXGO_GH_APP_CLIENT_ID       the App Client ID, the Iv23 string on the App settings page")
+	fmt.Fprintln(stdout, "      AIXGO_AZURE_OPENAI_ENDPOINT  e.g. https://<resource>.openai.azure.com")
 	fmt.Fprintln(stdout, "  - add two repository SECRETS, on the Secrets tab of that same page:")
-	fmt.Fprintln(stdout, "      SIMPLYCUBED_GH_APP_PRIVATE_KEY     the full PEM, including the BEGIN and END lines")
-	fmt.Fprintln(stdout, "      SIMPLYCUBED_AZURE_OPENAI_API_KEY   the Azure OpenAI key")
+	fmt.Fprintln(stdout, "      AIXGO_GH_APP_PRIVATE_KEY     the full PEM, including the BEGIN and END lines")
+	fmt.Fprintln(stdout, "      AIXGO_AZURE_OPENAI_API_KEY   the Azure OpenAI key")
 	fmt.Fprintln(stdout, "    Variables and Secrets are different tabs. A value filed under the wrong one reads back")
 	fmt.Fprintln(stdout, "    as empty, and the run fails without saying why.")
 	fmt.Fprintln(stdout, "  - merge the PR containing the config and workflow changes")
-	fmt.Fprintln(stdout, "  - run the self-test once: gh workflow run simplycubed-selftest")
-	fmt.Fprintln(stdout, "  - delete .github/workflows/simplycubed-selftest.yml once it passes")
-	fmt.Fprintln(stdout, "  - file an issue and apply the sc:go label")
+	fmt.Fprintln(stdout, "  - run the self-test once: gh workflow run aixgo-selftest")
+	fmt.Fprintln(stdout, "  - delete .github/workflows/aixgo-selftest.yml once it passes")
+	fmt.Fprintln(stdout, "  - file an issue and apply the ax:go label")
 	return nil
 }
 
@@ -881,7 +881,7 @@ func resolveAppName(repoDir, flagValue string) (string, error) {
 	if v := strings.TrimSuffix(strings.TrimPrefix(strings.TrimSpace(flagValue), "@"), "[bot]"); v != "" {
 		return v, nil
 	}
-	if cfg, err := config.Load(filepath.Join(repoDir, ".github", "simplycubed.yml")); err == nil && cfg.AppName != "" {
+	if cfg, err := config.Load(filepath.Join(repoDir, ".github", "aixgo.yml")); err == nil && cfg.AppName != "" {
 		return cfg.AppName, nil
 	}
 	return "", errors.New("--app-name is required: comment commands address the App you installed, and its name is unique to you. Pass the App's name without the \"[bot]\" suffix, for example --app-name acme-code")

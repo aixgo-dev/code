@@ -8,7 +8,7 @@ We aim to acknowledge a report within 3 business days.
 
 ## Design constraints
 
-SimplyCubed Code runs inside your own GitHub Actions and opens pull requests. By design it:
+Aixgo Code runs inside your own GitHub Actions and opens pull requests. By design it:
 
 - never merges its own work and never pushes to protected branches,
 - holds no deploy or production credentials,
@@ -16,7 +16,7 @@ SimplyCubed Code runs inside your own GitHub Actions and opens pull requests. By
 
 ## Out of scope
 
-The following are not treated as vulnerabilities in SimplyCubed Code:
+The following are not treated as vulnerabilities in Aixgo Code:
 
 - The agent proposing a low-quality or incorrect change. Whether to merge is always a human decision.
 - Behavior that results from a repository's own configuration, such as granting the app more access than it needs or leaving branch protection off.

@@ -62,10 +62,10 @@ jobs:
           VERSION: ${{ steps.notes.outputs.version }}
         run: |
           mkdir -p bin
-          go build -ldflags="-X github.com/simplycubed/code/internal/buildinfo.Version=${VERSION}" -o bin/simplycubed ./cmd/simplycubed
-          got="$(./bin/simplycubed version)"
+          go build -ldflags="-X github.com/aixgo-dev/code/internal/buildinfo.Version=${VERSION}" -o bin/aixgo ./cmd/aixgo
+          got="$(./bin/aixgo version)"
           if [ "$got" != "$VERSION" ]; then
-            echo "simplycubed version = ${got}, want ${VERSION}" >&2
+            echo "aixgo version = ${got}, want ${VERSION}" >&2
             exit 1
           fi
       - name: Create GitHub release

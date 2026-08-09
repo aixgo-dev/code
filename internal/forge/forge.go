@@ -11,7 +11,7 @@ package forge
 import (
 	"context"
 
-	"github.com/simplycubed/code/internal/domain"
+	"github.com/aixgo-dev/code/internal/domain"
 )
 
 // Forge is the subset of GitHub operations the loop performs.

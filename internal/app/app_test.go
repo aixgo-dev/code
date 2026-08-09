@@ -8,20 +8,20 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/simplycubed/code/internal/app"
-	"github.com/simplycubed/code/internal/config"
-	"github.com/simplycubed/code/internal/domain"
-	forgefake "github.com/simplycubed/code/internal/forge/fake"
-	"github.com/simplycubed/code/internal/loop"
-	"github.com/simplycubed/code/internal/worktree"
+	"github.com/aixgo-dev/code/internal/app"
+	"github.com/aixgo-dev/code/internal/config"
+	"github.com/aixgo-dev/code/internal/domain"
+	forgefake "github.com/aixgo-dev/code/internal/forge/fake"
+	"github.com/aixgo-dev/code/internal/loop"
+	"github.com/aixgo-dev/code/internal/worktree"
 )
 
 func TestParseIssueRef(t *testing.T) {
-	iss, err := app.ParseIssueRef("simplycubed/code#42")
+	iss, err := app.ParseIssueRef("aixgo-dev/code#42")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if iss.Repo != "simplycubed/code" || iss.Number != 42 {
+	if iss.Repo != "aixgo-dev/code" || iss.Number != 42 {
 		t.Fatalf("parsed %+v", iss)
 	}
 	for _, bad := range []string{"", "not-a-ref", "owner/repo", "owner/repo#", "owner#3"} {
@@ -32,8 +32,8 @@ func TestParseIssueRef(t *testing.T) {
 }
 
 func TestStateLabels(t *testing.T) {
-	got := strings.Join(app.StateLabels("sc"), " ")
-	for _, want := range []string{"sc:go", "sc:working", "sc:done"} {
+	got := strings.Join(app.StateLabels("ax"), " ")
+	for _, want := range []string{"ax:go", "ax:working", "ax:done"} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("StateLabels missing %q: %s", want, got)
 		}
@@ -92,7 +92,7 @@ func TestRunOnboardsWorktreeAndDrivesLoop(t *testing.T) {
 		VCS:       nil, // exercised in the loop package; here we test the app glue
 		Worktrees: &worktree.Manager{RepoDir: repo, BaseDir: baseDir},
 	}
-	cfg := &config.Config{LabelPrefix: "sc", Gate: "test -f fixed"}
+	cfg := &config.Config{LabelPrefix: "ax", Gate: "test -f fixed"}
 
 	res, err := app.Run(context.Background(), d, cfg, domain.Issue{Repo: "o/r", Number: 12, Title: "t", Body: "b"}, "HEAD")
 	if err != nil {

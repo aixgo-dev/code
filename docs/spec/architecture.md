@@ -1,6 +1,6 @@
 # Architecture
 
-SimplyCubed Code turns a GitHub issue into a reviewed pull request, running
+Aixgo Code turns a GitHub issue into a reviewed pull request, running
 inside the adopter's own GitHub Actions. This document describes the shape of the
 system. It is a design under construction, not a description of finished code.
 Where the code exists, it matches this; where it does not yet, this is the
@@ -39,12 +39,12 @@ repo's own gate does), and there is no code path that merges.
 - **`gate`** — runs the repo's configured gate command, captures the exit code, a
   bounded tail of output, and a normalized signature (used to detect a loop that
   is failing the same way every iteration rather than making progress).
-- **`config`** — loads `.github/simplycubed.yml`. The `gate:` command is required;
+- **`config`** — loads `.github/aixgo.yml`. The `gate:` command is required;
   a config without it is an error, not a default to paper over.
-- **`state`** — the label lifecycle. `sc:go` is the only human-applied label; the
-  bot drives `sc:queued -> sc:working -> sc:review -> sc:blocked | sc:done`. States
+- **`state`** — the label lifecycle. `ax:go` is the only human-applied label; the
+  bot drives `ax:queued -> ax:working -> ax:review -> ax:blocked | ax:done`. States
   are mutually exclusive; the bot removes the prior label. The prefix is
-  configurable (`labelPrefix`, default `sc`).
+  configurable (`labelPrefix`, default `ax`).
 - **`loop`** — the engine: run a role, grade against the gate, feed failure back,
   repeat until the gate passes or the loop stalls. It opens a pull request only on
   success. On a stall it escalates (labels the issue for a human) and opens no PR.
@@ -64,7 +64,7 @@ merge gate is CI plus a human, never a bot's own approval.
 The product ships as a published GitHub Action plus reusable workflows. One role
 turn is one Actions job, triggered by an issue label or a review event, chained
 through the events each turn emits. State is GitHub; the ledger is a file on an
-orphan branch. Nothing is hosted by SimplyCubed.
+orphan branch. Nothing is hosted by Aixgo.
 
 ## What is intentionally deferred
 

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/simplycubed/code/internal/domain"
+	"github.com/aixgo-dev/code/internal/domain"
 )
 
 // writeFakeClaude installs a stub on PATH so the adapter can be exercised with

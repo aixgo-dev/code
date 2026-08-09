@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	enginefake "github.com/simplycubed/code/internal/engine/fake"
-	forgefake "github.com/simplycubed/code/internal/forge/fake"
-	"github.com/simplycubed/code/internal/state"
+	enginefake "github.com/aixgo-dev/code/internal/engine/fake"
+	forgefake "github.com/aixgo-dev/code/internal/forge/fake"
+	"github.com/aixgo-dev/code/internal/state"
 )
 
 func newFixEngine(dir string, v VCS, r *enginefake.Runner) (*Engine, *forgefake.Forge) {
@@ -52,14 +52,14 @@ func TestFixPushesToBranchAndReRequestsReview(t *testing.T) {
 		t.Fatalf("commit message = %q", v.commitMsg)
 	}
 	// Attribution on by default: the commit carries the co-author trailer.
-	if !strings.Contains(v.commitMsg, "SimplyCubed Code") {
+	if !strings.Contains(v.commitMsg, "Aixgo Code") {
 		t.Fatalf("expected attribution trailer in commit message: %q", v.commitMsg)
 	}
 	if len(f.PRComments) != 1 || !strings.Contains(f.PRComments[0], "Ready for another look") {
 		t.Fatalf("expected an ack comment on the PR, got %v", f.PRComments)
 	}
 	// State goes on the linked issue (7), back to review.
-	if !f.SawState(state.Label("sc", state.Review)) {
+	if !f.SawState(state.Label("ax", state.Review)) {
 		t.Fatal("expected the review label after pushing the fix")
 	}
 }
@@ -82,7 +82,7 @@ func TestFixUnsatisfiableBlocksWithoutPush(t *testing.T) {
 	if v.pushDone {
 		t.Fatal("a blocked fix must not push")
 	}
-	if !f.SawState(state.Label("sc", state.Blocked)) {
+	if !f.SawState(state.Label("ax", state.Blocked)) {
 		t.Fatal("expected the blocked label")
 	}
 	if len(f.PRComments) == 0 || !strings.Contains(f.PRComments[0], "Blocked") {
@@ -126,7 +126,7 @@ func TestFixStateFallsBackToPRWhenNoIssue(t *testing.T) {
 	if _, err := eng.Fix(context.Background(), req); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !f.SawState(state.Label("sc", state.Review)) {
+	if !f.SawState(state.Label("ax", state.Review)) {
 		t.Fatal("expected the review label to be set on the PR when there is no linked issue")
 	}
 }

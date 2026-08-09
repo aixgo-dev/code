@@ -1,4 +1,4 @@
-# SimplyCubed Code — installation self-test.
+# Aixgo Code — installation self-test.
 #
 # Dispatch this once after installing, to find out whether THIS repository's
 # runners can actually do what the agent needs. It answers questions that only a
@@ -10,10 +10,10 @@
 # request.
 #
 # DELETE OR DISABLE THIS FILE once the install is validated. Normal operation
-# goes through the GitHub App and the sc:go label, which is the path every
+# goes through the GitHub App and the ax:go label, which is the path every
 # adopter uses. This file exists so a bad install fails in one minute here
 # instead of silently during a real run.
-name: simplycubed-selftest
+name: aixgo-selftest
 
 on:
   workflow_dispatch:
@@ -34,8 +34,8 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
-          client-id: ${{ vars.SIMPLYCUBED_GH_APP_CLIENT_ID }}
-          private-key: ${{ secrets.SIMPLYCUBED_GH_APP_PRIVATE_KEY }}
+          client-id: ${{ vars.AIXGO_GH_APP_CLIENT_ID }}
+          private-key: ${{ secrets.AIXGO_GH_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
           repositories: ${{ github.event.repository.name }}
           permission-contents: write
@@ -68,8 +68,8 @@ jobs:
 
       - name: Check the repository config
         run: |
-          test -f .github/simplycubed.yml || { echo "FAIL: .github/simplycubed.yml is missing. Run 'simplycubed init'." >&2; exit 1; }
-          if ! grep -qE '^gate:[[:space:]]*[^[:space:]]' .github/simplycubed.yml; then
+          test -f .github/aixgo.yml || { echo "FAIL: .github/aixgo.yml is missing. Run 'aixgo init'." >&2; exit 1; }
+          if ! grep -qE '^gate:[[:space:]]*[^[:space:]]' .github/aixgo.yml; then
             echo "FAIL: no gate command is set. A repository with no gate is refused on purpose." >&2
             exit 1
           fi
@@ -89,16 +89,16 @@ jobs:
         if: ${{ inputs.engine != '' }}
         env:
           ENGINE: ${{ inputs.engine }}
-          SIMPLYCUBED_AZURE_OPENAI_ENDPOINT: ${{ vars.SIMPLYCUBED_AZURE_OPENAI_ENDPOINT }}
-          SIMPLYCUBED_AZURE_OPENAI_API_KEY: ${{ secrets.SIMPLYCUBED_AZURE_OPENAI_API_KEY }}
+          AIXGO_AZURE_OPENAI_ENDPOINT: ${{ vars.AIXGO_AZURE_OPENAI_ENDPOINT }}
+          AIXGO_AZURE_OPENAI_API_KEY: ${{ secrets.AIXGO_AZURE_OPENAI_API_KEY }}
         run: |
           # This is the check that matters most, and the one no local run can make
           # for you: the engine's sandbox uses kernel features a runner may not
           # grant. When it cannot start, the agent silently does nothing and the
           # run still reports success.
           if [ "${ENGINE}" = "codex" ]; then
-            [ -n "${SIMPLYCUBED_AZURE_OPENAI_ENDPOINT}" ] || { echo "FAIL: SIMPLYCUBED_AZURE_OPENAI_ENDPOINT is not set (repository VARIABLE)." >&2; exit 1; }
-            [ -n "${SIMPLYCUBED_AZURE_OPENAI_API_KEY}" ] || { echo "FAIL: SIMPLYCUBED_AZURE_OPENAI_API_KEY is not set (repository SECRET)." >&2; exit 1; }
+            [ -n "${AIXGO_AZURE_OPENAI_ENDPOINT}" ] || { echo "FAIL: AIXGO_AZURE_OPENAI_ENDPOINT is not set (repository VARIABLE)." >&2; exit 1; }
+            [ -n "${AIXGO_AZURE_OPENAI_API_KEY}" ] || { echo "FAIL: AIXGO_AZURE_OPENAI_API_KEY is not set (repository SECRET)." >&2; exit 1; }
             npm install -g @openai/codex@0.146.0 >/dev/null 2>&1
             out="$(codex exec --skip-git-repo-check -s workspace-write -C . 'Run: echo SELFTEST_OK' 2>&1 || true)"
             if printf '%s' "${out}" | grep -q "bwrap"; then
@@ -118,4 +118,4 @@ jobs:
         run: |
           echo "Self-test finished. A failure above names the thing to fix."
           echo "Delete or disable this workflow once the install is validated;"
-          echo "normal operation goes through the App and the sc:go label."
+          echo "normal operation goes through the App and the ax:go label."

@@ -1,7 +1,7 @@
 // Package describe turns an engine-produced artifact into the rich pull-request
 // description of issue #16: a walkthrough, a changes table, and mermaid sequence
 // diagrams. The engine writes the artifact as JSON to a file inside the
-// .simplycubed scratch directory; the loop reads it back before the commit step,
+// .aixgo scratch directory; the loop reads it back before the commit step,
 // which then deletes the scratch directory, so the artifact is structurally
 // incapable of leaking into the pull request.
 //
@@ -19,9 +19,9 @@ import (
 )
 
 // RelPath is the artifact path relative to the working tree, as given to the
-// engine in the describer prompt. It lives under the .simplycubed scratch
+// engine in the describer prompt. It lives under the .aixgo scratch
 // directory, which the VCS deletes before staging, so it can never be committed.
-const RelPath = ".simplycubed/describe.json"
+const RelPath = ".aixgo/describe.json"
 
 // Change is one row of the changes table: a semantic area and what changed in it.
 type Change struct {
@@ -86,8 +86,8 @@ func validMermaid(s string) bool {
 // regeneration (for example after a fixer push) can replace exactly its own
 // output without touching human edits around it.
 const (
-	BeginMarker = "<!-- simplycubed:describe -->"
-	EndMarker   = "<!-- /simplycubed:describe -->"
+	BeginMarker = "<!-- aixgo:describe -->"
+	EndMarker   = "<!-- /aixgo:describe -->"
 )
 
 // tableCell flattens a value for a one-line markdown table cell.

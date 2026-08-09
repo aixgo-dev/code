@@ -113,7 +113,7 @@ func TestAddResolvesBaseWhenOriginHeadIsMissing(t *testing.T) {
 		t.Fatal("origin/HEAD should be absent for this test to be meaningful")
 	}
 
-	path, err := m.Add(ctx, "sc/57", "origin/HEAD")
+	path, err := m.Add(ctx, "ax/57", "origin/HEAD")
 	if err != nil {
 		t.Fatalf("Add with a missing origin/HEAD must resolve a base, got: %v", err)
 	}
@@ -210,7 +210,7 @@ func TestAddFailsWhenTheBaseCannotBeResolved(t *testing.T) {
 
 	// A named base that does not exist must surface as an error from Add, not
 	// as a worktree quietly created from something else.
-	if _, err := m.Add(context.Background(), "sc/57", "origin/nope"); err == nil {
+	if _, err := m.Add(context.Background(), "ax/57", "origin/nope"); err == nil {
 		t.Fatal("expected Add to fail when the base ref cannot be resolved")
 	}
 }
@@ -221,7 +221,7 @@ func TestAddReportsWhatGitSaidWhenCreationFails(t *testing.T) {
 	}
 	baseDir := t.TempDir()
 	// Occupy the path the worktree would be created at, so git refuses.
-	occupied := filepath.Join(baseDir, "sc-57")
+	occupied := filepath.Join(baseDir, "ax-57")
 	if err := os.MkdirAll(occupied, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -230,13 +230,13 @@ func TestAddReportsWhatGitSaidWhenCreationFails(t *testing.T) {
 	}
 	m := &Manager{RepoDir: initRepo(t), BaseDir: baseDir}
 
-	_, err := m.Add(context.Background(), "sc/57", "HEAD")
+	_, err := m.Add(context.Background(), "ax/57", "HEAD")
 	if err == nil {
 		t.Fatal("expected Add to fail when the target path is occupied")
 	}
 	// git's own message has to reach the operator; a bare "worktree add failed"
 	// would leave them with nothing to act on.
-	if !strings.Contains(err.Error(), "sc/57") {
+	if !strings.Contains(err.Error(), "ax/57") {
 		t.Fatalf("error should name the branch: %v", err)
 	}
 }

@@ -8,13 +8,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/simplycubed/code/internal/app"
-	"github.com/simplycubed/code/internal/config"
-	"github.com/simplycubed/code/internal/domain"
-	forgefake "github.com/simplycubed/code/internal/forge/fake"
-	"github.com/simplycubed/code/internal/loop"
-	vcsgit "github.com/simplycubed/code/internal/vcs/git"
-	"github.com/simplycubed/code/internal/worktree"
+	"github.com/aixgo-dev/code/internal/app"
+	"github.com/aixgo-dev/code/internal/config"
+	"github.com/aixgo-dev/code/internal/domain"
+	forgefake "github.com/aixgo-dev/code/internal/forge/fake"
+	"github.com/aixgo-dev/code/internal/loop"
+	vcsgit "github.com/aixgo-dev/code/internal/vcs/git"
+	"github.com/aixgo-dev/code/internal/worktree"
 )
 
 func git(t *testing.T, dir string, args ...string) string {
@@ -94,7 +94,7 @@ func TestAddressPRPushesFixToExistingBranch(t *testing.T) {
 		VCS:       &vcsgit.Git{},
 		Worktrees: &worktree.Manager{RepoDir: repoDir, BaseDir: t.TempDir()},
 	}
-	cfg := &config.Config{LabelPrefix: "sc", Gate: "test -f fixed", Attribution: true}
+	cfg := &config.Config{LabelPrefix: "ax", Gate: "test -f fixed", Attribution: true}
 
 	res, err := app.AddressPR(context.Background(), d, cfg, "o/r", 42)
 	if err != nil {
@@ -116,7 +116,7 @@ func TestAddressPRPushesFixToExistingBranch(t *testing.T) {
 	if !strings.Contains(msg, "Address review feedback") {
 		t.Fatalf("pushed commit message = %q", msg)
 	}
-	if !strings.Contains(msg, "Co-Authored-By: SimplyCubed Code") {
+	if !strings.Contains(msg, "Co-Authored-By: Aixgo Code") {
 		t.Fatalf("expected attribution trailer in pushed commit: %q", msg)
 	}
 	// No new PR opened; the PR was commented and returned to review.
@@ -138,7 +138,7 @@ func TestAddressPRNoFeedbackIsCleanNoOp(t *testing.T) {
 		VCS:       &vcsgit.Git{},
 		Worktrees: &worktree.Manager{RepoDir: t.TempDir(), BaseDir: t.TempDir()},
 	}
-	cfg := &config.Config{LabelPrefix: "sc", Gate: "test -f fixed", Attribution: true}
+	cfg := &config.Config{LabelPrefix: "ax", Gate: "test -f fixed", Attribution: true}
 
 	res, err := app.AddressPR(context.Background(), d, cfg, "o/r", 42)
 	if err != nil {

@@ -1,6 +1,6 @@
 // Package verdict carries the reviewer's judgment of a pending change between
 // the engine and the loop. It mirrors internal/describe: the reviewer writes one
-// JSON file into the .simplycubed scratch directory, which the commit step
+// JSON file into the .aixgo scratch directory, which the commit step
 // deletes before staging, so a verdict can never land in a pull request.
 //
 // A missing or malformed verdict is not a pass. The loop treats it as an absent
@@ -15,11 +15,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/simplycubed/code/internal/domain"
+	"github.com/aixgo-dev/code/internal/domain"
 )
 
 // RelPath is where the reviewer writes its verdict, relative to the worktree.
-const RelPath = ".simplycubed/verdict.json"
+const RelPath = ".aixgo/verdict.json"
 
 type wireFinding struct {
 	ID       string `json:"id"`

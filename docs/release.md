@@ -1,6 +1,6 @@
 # Release Process
 
-`v0.1.0` was the first tagged SimplyCubed Code release. A tag means the code at
+`v0.1.0` was the first tagged Aixgo Code release. A tag means the code at
 that commit passed the repo gate (`make check`), the CLI version reports that
 same release, and the maintainer published release notes for it.
 
@@ -32,11 +32,11 @@ section for it, or any version pin disagrees with it.
 For each tag:
 
 1. Update `CHANGELOG.md`.
-2. Confirm `go install github.com/simplycubed/code/cmd/simplycubed@<tag>` and
-   `simplycubed version` report the same version without the leading `v`.
-3. Update `latestKnownWorkflowTag` in `cmd/simplycubed/main.go`, the pins in
-   `docs/templates/simplycubed-caller.yml`, and the default `version` input in
-   `.github/workflows/simplycubed.yml`. The release check enforces that all
+2. Confirm `go install github.com/aixgo-dev/code/cmd/aixgo@<tag>` and
+   `aixgo version` report the same version without the leading `v`.
+3. Update `latestKnownWorkflowTag` in `cmd/aixgo/main.go`, the pins in
+   `docs/templates/aixgo-caller.yml`, and the default `version` input in
+   `.github/workflows/aixgo.yml`. The release check enforces that all
    three agree with the tag.
 4. Push the tag and publish matching GitHub release notes.
 

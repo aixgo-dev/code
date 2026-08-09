@@ -60,21 +60,21 @@ func TestOpenPRReturnsURL(t *testing.T) {
 // other state label, so exactly one remains.
 func TestSetStateRemovesPriorStateLabels(t *testing.T) {
 	bin, log := stubGH(t)
-	states := []string{"sc:go", "sc:queued", "sc:working", "sc:review", "sc:blocked", "sc:done"}
+	states := []string{"ax:go", "ax:queued", "ax:working", "ax:review", "ax:blocked", "ax:done"}
 	f := &Forge{Bin: bin, StateLabels: states}
 
-	if err := f.SetState(context.Background(), "o/r", 7, "sc:working"); err != nil {
+	if err := f.SetState(context.Background(), "o/r", 7, "ax:working"); err != nil {
 		t.Fatalf("SetState: %v", err)
 	}
 	logged := readLog(t, log)
 
-	if !strings.Contains(logged, "--add-label sc:working") {
+	if !strings.Contains(logged, "--add-label ax:working") {
 		t.Fatalf("did not add the new state label: %s", logged)
 	}
-	if strings.Contains(logged, "--remove-label sc:working") {
+	if strings.Contains(logged, "--remove-label ax:working") {
 		t.Fatalf("must not remove the label it is setting: %s", logged)
 	}
-	for _, other := range []string{"sc:go", "sc:queued", "sc:review", "sc:blocked", "sc:done"} {
+	for _, other := range []string{"ax:go", "ax:queued", "ax:review", "ax:blocked", "ax:done"} {
 		if !strings.Contains(logged, "--remove-label "+other) {
 			t.Fatalf("did not remove prior state label %s: %s", other, logged)
 		}
@@ -115,7 +115,7 @@ func TestEnsureLabelsCreatesOnlyMissingLabels(t *testing.T) {
 	script := `#!/bin/sh
 printf '%s\n' "$*" >> "$GH_STUB_LOG"
 if [ "$1 $2" = "label list" ]; then
-  echo '[{"name":"sc:go"},{"name":"sc:done"}]'
+  echo '[{"name":"ax:go"},{"name":"ax:done"}]'
   exit 0
 fi
 exit 0
@@ -126,21 +126,21 @@ exit 0
 	t.Setenv("GH_STUB_LOG", log)
 
 	f := &Forge{Bin: bin}
-	created, err := f.EnsureLabels(context.Background(), []string{"sc:go", "sc:queued", "sc:done"})
+	created, err := f.EnsureLabels(context.Background(), []string{"ax:go", "ax:queued", "ax:done"})
 	if err != nil {
 		t.Fatalf("EnsureLabels: %v", err)
 	}
-	if strings.Join(created, ",") != "sc:queued" {
-		t.Fatalf("created = %v, want [sc:queued]", created)
+	if strings.Join(created, ",") != "ax:queued" {
+		t.Fatalf("created = %v, want [ax:queued]", created)
 	}
 	logged := readLog(t, log)
 	if !strings.Contains(logged, "label list --limit 1000 --json name") {
 		t.Fatalf("did not list labels first: %s", logged)
 	}
-	if !strings.Contains(logged, "label create sc:queued") {
+	if !strings.Contains(logged, "label create ax:queued") {
 		t.Fatalf("missing label not created: %s", logged)
 	}
-	if strings.Contains(logged, "label create sc:go") || strings.Contains(logged, "label create sc:done") {
+	if strings.Contains(logged, "label create ax:go") || strings.Contains(logged, "label create ax:done") {
 		t.Fatalf("existing labels should be left untouched: %s", logged)
 	}
 }
@@ -163,7 +163,7 @@ fi
 if [ "$1" = "api" ]; then
   # Emulate gh api --paginate --slurp: an array whose elements are per-page arrays.
   case "$2" in
-    *reviews*) echo '[[{"user":{"login":"human"},"body":"please rename X","state":"CHANGES_REQUESTED","commit_id":"HEAD1"},{"user":{"login":"human"},"body":"stale note","state":"CHANGES_REQUESTED","commit_id":"OLD0"},{"user":{"login":"simplycubed-code[bot]"},"body":"i addressed it","state":"COMMENTED","commit_id":"HEAD1"},{"user":{"login":"human"},"body":"","state":"COMMENTED","commit_id":"HEAD1"}]]' ;;
+    *reviews*) echo '[[{"user":{"login":"human"},"body":"please rename X","state":"CHANGES_REQUESTED","commit_id":"HEAD1"},{"user":{"login":"human"},"body":"stale note","state":"CHANGES_REQUESTED","commit_id":"OLD0"},{"user":{"login":"aixgo-code[bot]"},"body":"i addressed it","state":"COMMENTED","commit_id":"HEAD1"},{"user":{"login":"human"},"body":"","state":"COMMENTED","commit_id":"HEAD1"}]]' ;;
     *comments*) echo '[[{"user":{"login":"human"},"body":"fix this line","path":"main.go","line":10,"original_line":9,"commit_id":"HEAD1"},{"user":{"login":"human"},"body":"old inline","path":"main.go","line":5,"commit_id":"OLD0"}]]' ;;
   esac
   exit 0
@@ -181,7 +181,7 @@ exit 0
 // re-addressing old or self-authored feedback forever (the dead review/fix cycle
 // looper hit from a different direction).
 func TestFeedbackFiltersToHeadAndExcludesSelf(t *testing.T) {
-	f := &Forge{Bin: stubGHFeedback(t), Self: "simplycubed-code[bot]"}
+	f := &Forge{Bin: stubGHFeedback(t), Self: "aixgo-code[bot]"}
 	fb, err := f.Feedback(context.Background(), "o/r", 42)
 	if err != nil {
 		t.Fatalf("Feedback: %v", err)
@@ -199,7 +199,7 @@ func TestFeedbackFiltersToHeadAndExcludesSelf(t *testing.T) {
 	}
 	var sawReview, sawInline bool
 	for _, n := range fb.Notes {
-		if n.Author == "simplycubed-code[bot]" {
+		if n.Author == "aixgo-code[bot]" {
 			t.Fatalf("self-authored feedback leaked in: %+v", n)
 		}
 		if strings.Contains(n.Body, "stale") || strings.Contains(n.Body, "old inline") {
@@ -273,9 +273,9 @@ func TestCanWriteTreats404AsNo(t *testing.T) {
 }
 
 func TestWhoami(t *testing.T) {
-	f := &Forge{Bin: stubGHReplying(t, `{"data":{"viewer":{"login":"simplycubed-code[bot]"}}}`, 0)}
+	f := &Forge{Bin: stubGHReplying(t, `{"data":{"viewer":{"login":"aixgo-code[bot]"}}}`, 0)}
 	got, err := f.Whoami(context.Background())
-	if err != nil || got != "simplycubed-code[bot]" {
+	if err != nil || got != "aixgo-code[bot]" {
 		t.Fatalf("Whoami() = %q, %v", got, err)
 	}
 	// An empty login is not a usable identity; reporting it as one would make

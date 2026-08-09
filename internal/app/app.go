@@ -12,17 +12,17 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/simplycubed/code/internal/config"
-	"github.com/simplycubed/code/internal/describe"
-	"github.com/simplycubed/code/internal/domain"
-	"github.com/simplycubed/code/internal/engine"
-	"github.com/simplycubed/code/internal/forge"
-	"github.com/simplycubed/code/internal/gate"
-	"github.com/simplycubed/code/internal/loop"
-	"github.com/simplycubed/code/internal/roles"
-	"github.com/simplycubed/code/internal/state"
-	"github.com/simplycubed/code/internal/verdict"
-	"github.com/simplycubed/code/internal/worktree"
+	"github.com/aixgo-dev/code/internal/config"
+	"github.com/aixgo-dev/code/internal/describe"
+	"github.com/aixgo-dev/code/internal/domain"
+	"github.com/aixgo-dev/code/internal/engine"
+	"github.com/aixgo-dev/code/internal/forge"
+	"github.com/aixgo-dev/code/internal/gate"
+	"github.com/aixgo-dev/code/internal/loop"
+	"github.com/aixgo-dev/code/internal/roles"
+	"github.com/aixgo-dev/code/internal/state"
+	"github.com/aixgo-dev/code/internal/verdict"
+	"github.com/aixgo-dev/code/internal/worktree"
 )
 
 // Deps are the injected collaborators.
@@ -35,7 +35,7 @@ type Deps struct {
 	// escalation. Empty for a local run under a human's own credential.
 	SelfLogin string
 
-	// WorkflowRestrictedPush marks runs authenticated as the SimplyCubed GitHub
+	// WorkflowRestrictedPush marks runs authenticated as the Aixgo GitHub
 	// App, whose token deliberately lacks `workflows` permission.
 	WorkflowRestrictedPush bool
 }

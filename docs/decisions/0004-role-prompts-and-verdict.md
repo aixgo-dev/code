@@ -38,7 +38,7 @@ validation, and the prompts wait for evidence.
 ## What shipped
 
 The reviewer runs after the gate passes and before the pull request opens. It
-writes a verdict to `.simplycubed/verdict.json`, the same scratch-directory
+writes a verdict to `.aixgo/verdict.json`, the same scratch-directory
 transport the describer uses, so it cannot leak into a commit.
 
 Two details differ from the direction above, both learned rather than designed:

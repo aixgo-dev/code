@@ -12,11 +12,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/simplycubed/code/internal/domain"
-	enginefake "github.com/simplycubed/code/internal/engine/fake"
-	forgefake "github.com/simplycubed/code/internal/forge/fake"
-	"github.com/simplycubed/code/internal/gate"
-	"github.com/simplycubed/code/internal/loop"
+	"github.com/aixgo-dev/code/internal/domain"
+	enginefake "github.com/aixgo-dev/code/internal/engine/fake"
+	forgefake "github.com/aixgo-dev/code/internal/forge/fake"
+	"github.com/aixgo-dev/code/internal/gate"
+	"github.com/aixgo-dev/code/internal/loop"
 )
 
 func TestLoopComposesWithRealGateRunner(t *testing.T) {

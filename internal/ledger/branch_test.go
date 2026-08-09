@@ -59,7 +59,7 @@ func TestBranchStoreAppendsAndAccumulates(t *testing.T) {
 		t.Fatalf("second append: %v", err)
 	}
 
-	got := gitIn(t, repo, "show", "simplycubed/ledger:2026-07-31.jsonl")
+	got := gitIn(t, repo, "show", "aixgo/ledger:2026-07-31.jsonl")
 	if !strings.Contains(got, `"a"`) || !strings.Contains(got, `"b"`) {
 		t.Fatalf("both runs should be recorded, got:\n%s", got)
 	}
@@ -73,12 +73,12 @@ func TestBranchStoreKeepsNoCode(t *testing.T) {
 	if err := s.Append(context.Background(), `{"run_id":"a"}`, time.Now()); err != nil {
 		t.Fatalf("append: %v", err)
 	}
-	files := gitIn(t, repo, "ls-tree", "--name-only", "simplycubed/ledger")
+	files := gitIn(t, repo, "ls-tree", "--name-only", "aixgo/ledger")
 	if strings.Contains(files, "code.go") {
 		t.Fatalf("the ledger branch must not contain source: %s", files)
 	}
 	// An orphan branch has no parent, which is what keeps it out of history.
-	parents := strings.TrimSpace(gitIn(t, repo, "rev-list", "--parents", "-n", "1", "simplycubed/ledger"))
+	parents := strings.TrimSpace(gitIn(t, repo, "rev-list", "--parents", "-n", "1", "aixgo/ledger"))
 	if len(strings.Fields(parents)) != 1 {
 		t.Fatalf("the first ledger commit should have no parent, got %q", parents)
 	}

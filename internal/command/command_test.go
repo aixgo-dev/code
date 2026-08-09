@@ -36,7 +36,7 @@ func TestParseIgnoresAnythingNotAddressedToIt(t *testing.T) {
 		"@acme-code",                     // no verb
 		"@acme-code please do the thing", // unrecognised verb
 		"@acme-code-experimental go",     // a different bot
-		"@simplycubedcode go",            // near miss
+		"@aixgocode go",                  // near miss
 	} {
 		if got := Parse(body, "acme-code"); got != None {
 			t.Fatalf("Parse(%q) = %q, want None", body, got)
@@ -110,7 +110,7 @@ func TestHandleIsTheAdoptersOwnApp(t *testing.T) {
 	if got := Parse("@acme-code go", "acme-code"); got != Go {
 		t.Fatalf("Parse with the repo's own App = %q, want Go", got)
 	}
-	if got := Parse("@simplycubed-code go", "acme-code"); got != None {
+	if got := Parse("@aixgo-code go", "acme-code"); got != None {
 		t.Fatalf("a different App's handle = %q, want None: one repo's bot must not answer to another's", got)
 	}
 	// No configured App means no handle to answer to. Guessing one would answer

@@ -1,14 +1,14 @@
-# SimplyCubed Code configuration — this repo runs on itself.
+# Aixgo Code configuration — this repo runs on itself.
 #
 # The gate is `make check`, the same single command CI runs: gofmt, go vet,
 # build, and the full test suite. Fast, hermetic, and the one command that
 # decides whether a change is good.
-labelPrefix: sc
+labelPrefix: ax
 
 # The App this repository installed. Comment commands address it:
-# "@simplycubed-code go" on an issue starts work. The caller workflow triggers
+# "@aixgo-code go" on an issue starts work. The caller workflow triggers
 # on this same handle, and preflight fails if the two ever disagree.
-appName: simplycubed-code
+appName: aixgo-code
 
 gate: make check
 

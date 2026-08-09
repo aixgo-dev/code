@@ -1,11 +1,11 @@
 # Setup
 
-This guide shows how to install SimplyCubed Code in a repository you control so
+This guide shows how to install Aixgo Code in a repository you control so
 it can turn issues into pull requests inside your own GitHub environment.
 
 You will:
 
-- install the `simplycubed` CLI
+- install the `aixgo` CLI
 - generate the repository config and GitHub workflow files
 - connect your GitHub App and model credentials
 - run a one-time self-test
@@ -23,19 +23,19 @@ You need:
 ## Install and configure
 
 1. Install the CLI. Replace `<release-tag>` with the version you want from
-   [Releases](https://github.com/simplycubed/code/releases):
+   [Releases](https://github.com/aixgo-dev/code/releases):
 
 ```sh
-go install github.com/simplycubed/code/cmd/simplycubed@<release-tag>
-simplycubed version
+go install github.com/aixgo-dev/code/cmd/aixgo@<release-tag>
+aixgo version
 ```
 
-With `v0.3.0`, `simplycubed version` prints `0.3.0`.
+With `v0.4.0`, `aixgo version` prints `0.4.0`.
 
 2. In the target repository, generate the setup files and labels:
 
 ```sh
-simplycubed init --workflow --app-name <your-app>
+aixgo init --workflow --app-name <your-app>
 ```
 
 `--app-name` is the GitHub App you created in step 4, without the `[bot]`
@@ -48,12 +48,12 @@ access to the repository in the autocomplete, so someone types `@a` and is
 offered your bot without having to know its name. A fixed prefix could never do
 that, which is why the handle is per-repository rather than a constant.
 
-That creates the `sc:*` labels through your local `gh` session and writes three
+That creates the `ax:*` labels through your local `gh` session and writes three
 files into your repository:
 
-- `.github/simplycubed.yml`, the repository config
-- `.github/workflows/simplycubed.yml`, the workflow that runs SimplyCubed Code
-- `.github/workflows/simplycubed-selftest.yml`, a one-time installation check
+- `.github/aixgo.yml`, the repository config
+- `.github/workflows/aixgo.yml`, the workflow that runs Aixgo Code
+- `.github/workflows/aixgo-selftest.yml`, a one-time installation check
 
 These are local file changes in your repository. Nothing is merged or installed
 remotely for you.
@@ -62,25 +62,25 @@ remotely for you.
 
 `init` writes your App name into both:
 
-- **`.github/simplycubed.yml`** as `appName:`. This is the source of truth. The
+- **`.github/aixgo.yml`** as `appName:`. This is the source of truth. The
   agent reads it to decide what a command looks like, and it is a file the App
   can push, so the agent can maintain it.
-- **`.github/workflows/simplycubed.yml`** as the comment trigger. It has to be a
+- **`.github/workflows/aixgo.yml`** as the comment trigger. It has to be a
   literal there, because a workflow decides whether to start *before* any code
   runs. Matching loosely instead would spin up a runner every time someone
   mentions a colleague.
 
 The App deliberately holds no `workflows` permission, so it cannot change the
 second one. **If you rename your App, change `appName:` and re-run
-`simplycubed init --workflow` to rewrite the trigger.** `simplycubed preflight`
+`aixgo init --workflow` to rewrite the trigger.** `aixgo preflight`
 fails when the two disagree, because the alternative is silent: comments would
 simply stop working, with no error anywhere.
 
-3. Edit `.github/simplycubed.yml` and set a real gate that is already green on
+3. Edit `.github/aixgo.yml` and set a real gate that is already green on
 your default branch. A minimal customer setup looks like this:
 
 ```yaml
-labelPrefix: sc
+labelPrefix: ax
 appName: <your-app>
 gate: make check
 ```
@@ -91,9 +91,9 @@ Before wiring GitHub Actions, you can prove the loop works from your terminal
 with the same config file:
 
 ```sh
-export SIMPLYCUBED_AZURE_OPENAI_ENDPOINT="https://<resource>.openai.azure.com"
-export SIMPLYCUBED_AZURE_OPENAI_API_KEY="<key>"
-simplycubed run owner/repo#N --repo-dir .
+export AIXGO_AZURE_OPENAI_ENDPOINT="https://<resource>.openai.azure.com"
+export AIXGO_AZURE_OPENAI_API_KEY="<key>"
+aixgo run owner/repo#N --repo-dir .
 ```
 
 4. Create and install the GitHub App identity, then add the required repository
@@ -128,10 +128,10 @@ Then add these repository settings. **Variables and Secrets are different tabs**
 under Settings > Secrets and variables > Actions, and a value filed under the
 wrong one reads back as empty rather than failing:
 
-- Variable: `SIMPLYCUBED_GH_APP_CLIENT_ID`, the App Client ID, the `Iv23` string on the App settings page
-- Secret: `SIMPLYCUBED_GH_APP_PRIVATE_KEY`
-- Variable: `SIMPLYCUBED_AZURE_OPENAI_ENDPOINT`
-- Secret: `SIMPLYCUBED_AZURE_OPENAI_API_KEY`
+- Variable: `AIXGO_GH_APP_CLIENT_ID`, the App Client ID, the `Iv23` string on the App settings page
+- Secret: `AIXGO_GH_APP_PRIVATE_KEY`
+- Variable: `AIXGO_AZURE_OPENAI_ENDPOINT`
+- Secret: `AIXGO_AZURE_OPENAI_API_KEY`
 
 The Actions runtime authenticates as your App, so the Client ID and private key
 are both required. Store the private key as the full PEM contents, including the
@@ -144,22 +144,22 @@ alternative: the reusable workflow accepts App credentials only.
 
 5. Commit the generated config and workflow files in the target repository, open
 a setup pull request, and merge it yourself. Setup files are written locally by
-`simplycubed init` and merged by a human, because the runtime holds no
+`aixgo init` and merged by a human, because the runtime holds no
 `workflows` permission and cannot add its own workflow files.
 
 6. Run the installation self-test before you rely on the workflow:
 
 ```sh
-gh workflow run simplycubed-selftest
+gh workflow run aixgo-selftest
 ```
 
 That runs in your own environment and reports whether the App token resolves to
 a bot, whether it is correctly denied Actions administration, whether a commit
 is possible, and whether the engine can start there. Delete the self-test
-workflow once it passes; normal operation goes through the App and the `sc:go`
+workflow once it passes; normal operation goes through the App and the `ax:go`
 label.
 
-7. File an issue that describes a small change and apply the `sc:go` label.
+7. File an issue that describes a small change and apply the `ax:go` label.
 
 8. Wait for the workflow to open a pull request. Review it like any other PR:
 
@@ -171,10 +171,10 @@ That is the first end-to-end customer path: issue -> PR -> human merge.
 
 ## Day-to-day use
 
-Once setup is complete, your team uses SimplyCubed Code through normal GitHub
+Once setup is complete, your team uses Aixgo Code through normal GitHub
 workflows:
 
-- apply `sc:go` to an issue to start implementation
+- apply `ax:go` to an issue to start implementation
 - review the pull request the agent opens
 - request changes if needed; the fixer loop pushes updates back to the same PR
 - merge it yourself when it meets your standards
@@ -183,16 +183,16 @@ workflows:
 
 The same two Azure values are needed in both places, and setting one does not
 set the other. A repository secret is not visible to your local shell, and a
-reusable workflow inherits nothing from SimplyCubed.
+reusable workflow inherits nothing from Aixgo.
 
 ```mermaid
 flowchart TB
-    cfg[".github/simplycubed.yml<br/>gate, engine, review<br/>committed, never holds a key"]
+    cfg[".github/aixgo.yml<br/>gate, engine, review<br/>committed, never holds a key"]
 
     subgraph local["Local CLI: you are the identity"]
-        L1["your shell<br/>SIMPLYCUBED_AZURE_OPENAI_ENDPOINT<br/>SIMPLYCUBED_AZURE_OPENAI_API_KEY"]
+        L1["your shell<br/>AIXGO_AZURE_OPENAI_ENDPOINT<br/>AIXGO_AZURE_OPENAI_API_KEY"]
         L2["your gh auth"]
-        L3["simplycubed run / address"]
+        L3["aixgo run / address"]
         L4["commits and PR authored by you"]
         L1 --> L3
         L2 --> L3
@@ -200,10 +200,10 @@ flowchart TB
     end
 
     subgraph actions["GitHub Actions: the App is the identity"]
-        A1["repository variables<br/>SIMPLYCUBED_AZURE_OPENAI_ENDPOINT<br/>SIMPLYCUBED_GH_APP_CLIENT_ID"]
-        A2["repository secrets<br/>SIMPLYCUBED_AZURE_OPENAI_API_KEY<br/>SIMPLYCUBED_GH_APP_PRIVATE_KEY"]
+        A1["repository variables<br/>AIXGO_AZURE_OPENAI_ENDPOINT<br/>AIXGO_GH_APP_CLIENT_ID"]
+        A2["repository secrets<br/>AIXGO_AZURE_OPENAI_API_KEY<br/>AIXGO_GH_APP_PRIVATE_KEY"]
         A3["per-job installation token<br/>contents, issues, pull requests"]
-        A4["simplycubed run / address"]
+        A4["aixgo run / address"]
         A5["commits and PR authored by<br/>your-app-name[bot]"]
         A2 --> A3
         A1 --> A4
@@ -222,8 +222,8 @@ The shipped Codex-on-Azure setup needs these values:
 
 | Name | Where it is used | Secret? |
 | --- | --- | --- |
-| `SIMPLYCUBED_AZURE_OPENAI_ENDPOINT` | Base Azure OpenAI endpoint, for example `https://<resource>.openai.azure.com` | No |
-| `SIMPLYCUBED_AZURE_OPENAI_API_KEY` | Azure OpenAI API key | Yes |
+| `AIXGO_AZURE_OPENAI_ENDPOINT` | Base Azure OpenAI endpoint, for example `https://<resource>.openai.azure.com` | No |
+| `AIXGO_AZURE_OPENAI_API_KEY` | Azure OpenAI API key | Yes |
 | model or deployment name | Optional override passed as `--model` locally or `model:` in the caller workflow | No |
 
 If you do not set a model override, the CLI and reusable workflow default to
@@ -231,17 +231,17 @@ If you do not set a model override, the CLI and reusable workflow default to
 
 ## Where the key lives
 
-The API key lives in different places depending on where `simplycubed` runs.
+The API key lives in different places depending on where `aixgo` runs.
 
-- Local CLI run: export `SIMPLYCUBED_AZURE_OPENAI_API_KEY` in the shell that runs
-  `simplycubed`. Do not commit it, and do not expect a GitHub repository secret
+- Local CLI run: export `AIXGO_AZURE_OPENAI_API_KEY` in the shell that runs
+  `aixgo`. Do not commit it, and do not expect a GitHub repository secret
   to appear in your local terminal.
-- GitHub Actions run: store `SIMPLYCUBED_AZURE_OPENAI_API_KEY` as a repository secret. The
+- GitHub Actions run: store `AIXGO_AZURE_OPENAI_API_KEY` as a repository secret. The
   caller workflow passes it into the reusable workflow job as an environment
   variable.
 
 In both cases the config references the key by environment variable name. The
-key value does not belong in `.github/simplycubed.yml` or any committed file.
+key value does not belong in `.github/aixgo.yml` or any committed file.
 
 ## Local CLI vs GitHub Actions
 
@@ -249,22 +249,22 @@ Use the same endpoint and key in both places, but wire them differently.
 
 ### Local CLI
 
-For local runs such as `simplycubed run owner/repo#123`, the CLI reads:
+For local runs such as `aixgo run owner/repo#123`, the CLI reads:
 
-- `SIMPLYCUBED_AZURE_OPENAI_ENDPOINT` from your shell environment
-- `SIMPLYCUBED_AZURE_OPENAI_API_KEY` from your shell environment
-- the repo gate and label prefix from `.github/simplycubed.yml`
+- `AIXGO_AZURE_OPENAI_ENDPOINT` from your shell environment
+- `AIXGO_AZURE_OPENAI_API_KEY` from your shell environment
+- the repo gate and label prefix from `.github/aixgo.yml`
 
 Example:
 
 ```sh
-export SIMPLYCUBED_AZURE_OPENAI_ENDPOINT="https://<resource>.openai.azure.com"
-export SIMPLYCUBED_AZURE_OPENAI_API_KEY="<key>"
-simplycubed run owner/repo#123 --repo-dir .
+export AIXGO_AZURE_OPENAI_ENDPOINT="https://<resource>.openai.azure.com"
+export AIXGO_AZURE_OPENAI_API_KEY="<key>"
+aixgo run owner/repo#123 --repo-dir .
 ```
 
 To use Claude Code locally instead, set `engine: claude` in
-`.github/simplycubed.yml`. That local path uses your existing `claude` CLI
+`.github/aixgo.yml`. That local path uses your existing `claude` CLI
 authentication and does not need Azure variables:
 
 ```yaml
@@ -273,7 +273,7 @@ engine: claude
 ```
 
 ```sh
-simplycubed run owner/repo#123 --repo-dir .
+aixgo run owner/repo#123 --repo-dir .
 ```
 
 ### GitHub Actions
@@ -281,17 +281,17 @@ simplycubed run owner/repo#123 --repo-dir .
 For the hosted-in-your-GitHub path, the caller workflow in your repository
 passes:
 
-- `vars.SIMPLYCUBED_AZURE_OPENAI_ENDPOINT` to the reusable workflow input
+- `vars.AIXGO_AZURE_OPENAI_ENDPOINT` to the reusable workflow input
   `azure-openai-endpoint`
-- `secrets.SIMPLYCUBED_AZURE_OPENAI_API_KEY` to the reusable workflow secret
+- `secrets.AIXGO_AZURE_OPENAI_API_KEY` to the reusable workflow secret
   `azure-openai-api-key`
-- `vars.SIMPLYCUBED_GH_APP_CLIENT_ID` to the reusable workflow input
+- `vars.AIXGO_GH_APP_CLIENT_ID` to the reusable workflow input
   `github-app-client-id`
-- `secrets.SIMPLYCUBED_GH_APP_PRIVATE_KEY` to the reusable workflow secret
+- `secrets.AIXGO_GH_APP_PRIVATE_KEY` to the reusable workflow secret
   `github-app-private-key`
 
 The reusable workflow installs the CLI, exports the endpoint and key for the
-job, and runs `simplycubed run` or `simplycubed address`.
+job, and runs `aixgo run` or `aixgo address`.
 
 That hosted path is still Codex-on-Azure only. The reusable workflow installs
 the Codex CLI, not the Claude CLI, and its inputs and secrets still require the
@@ -302,7 +302,7 @@ Azure endpoint and API key.
 Two commands answer "is this configured correctly" without changing anything:
 
 ```sh
-simplycubed preflight
+aixgo preflight
 ```
 
 That validates the repository config and the engine settings and exits. It is
@@ -314,9 +314,9 @@ are different tabs and a value filed under the wrong one reads back as empty
 rather than failing:
 
 ```text
-error: configuration missing: SIMPLYCUBED_AZURE_OPENAI_ENDPOINT is not set. It is a
+error: configuration missing: AIXGO_AZURE_OPENAI_ENDPOINT is not set. It is a
 repository variable on your own repository, under Settings > Secrets and variables >
-Actions; a reusable workflow never inherits variables from SimplyCubed
+Actions; a reusable workflow never inherits variables from Aixgo
 ```
 
 A missing value exits **3**, so a caller can tell "go and set this" apart from a
@@ -325,7 +325,7 @@ which also checks the App credentials; a local run authenticates as you and neve
 uses them.
 
 ```sh
-simplycubed run owner/repo#N --dry-run
+aixgo run owner/repo#N --dry-run
 ```
 
 That runs the whole loop, including the engine and your real gate, and skips
@@ -342,10 +342,10 @@ If your Azure deployment name is not `gpt-5.4`, set it explicitly.
 - Local CLI:
 
   ```sh
-  simplycubed run owner/repo#N --repo-dir . --model <deployment-name>
+  aixgo run owner/repo#N --repo-dir . --model <deployment-name>
   ```
 - GitHub Actions: uncomment and set `model:` in
-  `.github/workflows/simplycubed.yml`.
+  `.github/workflows/aixgo.yml`.
 
 The current shipped workflow uses one model value per run. Per-role model
 tiering is not wired yet.

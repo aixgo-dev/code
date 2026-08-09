@@ -17,8 +17,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/simplycubed/code/internal/domain"
-	"github.com/simplycubed/code/internal/forge"
+	"github.com/aixgo-dev/code/internal/domain"
+	"github.com/aixgo-dev/code/internal/forge"
 )
 
 // Action is one write the run would have made.
