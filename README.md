@@ -1,5 +1,7 @@
 # Aixgo Code
 
+[![An agent that runs in your GitHub, not ours. Open source. Your runners, your secrets. A human merges.](docs/assets/aixgo-code.png)](https://aixgo.dev/code?utm_source=github&utm_medium=readme&utm_campaign=code)
+
 Aixgo Code is an autonomous coding agent you install into your own GitHub. Your team files an issue, the agent prepares a pull request in your repository, and one of your reviewers decides whether it ships.
 
 > Beta. Current release: `v0.4.0`. Product overview: [aixgo.dev/code](https://aixgo.dev/code?utm_source=github&utm_medium=readme&utm_campaign=code). See [Status](#status).
