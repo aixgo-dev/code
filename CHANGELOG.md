@@ -9,12 +9,31 @@ GitHub release notes for each tag.
 `aixgo-dev/code` and the product is Aixgo Code. Nothing about how the agent
 works changed in this release; every change below is a name.
 
-Re-run `aixgo init --workflow --app-name <your-app>` in each adopter repository
-to regenerate the config and workflow files under the new names, then rename the
-repository variables and secrets and the labels listed below. The old files keep
-working until they are replaced only in the sense that nothing deletes them: the
-new CLI reads `.github/aixgo.yml`, so an unmigrated repo behaves as if it has no
-config at all.
+Migrate each adopter repository in this order, because each step depends on the
+one before it:
+
+1. Rename `.github/simplycubed.yml` to `.github/aixgo.yml`, keeping its
+   contents. Do the rename rather than running `init` on a repo with no config:
+   `init` writes a blank starter, which would silently drop your `gate:`,
+   `engine:`, `attribution:`, and everything else you had set. With the renamed
+   file in place, re-running `init` keeps your values.
+2. Run `aixgo init --workflow --app-name <your-app>` to write the new caller and
+   self-test workflows under the new names.
+3. Delete the old `.github/workflows/simplycubed.yml` caller. Nothing deletes it
+   for you, and left in place it keeps firing on the same mention and label
+   events: with the old variables still set you get duplicate runs for every
+   command, and with the variables renamed you get a permanently failing run
+   next to every real one.
+4. Rename the repository variables and secrets and create the `ax:*` labels
+   listed below.
+5. Finish (or re-label and close out) any issue the agent has in flight before
+   upgrading. The one-branch, one-pull-request, and one-state-label guards are
+   keyed to the label prefix, so an issue mid-flight as `sc:working` on branch
+   `sc/N` is invisible to a v0.4.0 run, which would start over as `ax/N` with a
+   second pull request.
+
+An unmigrated repo does not break; the new CLI reads `.github/aixgo.yml`, so it
+behaves as if it has no config at all and refuses to run.
 
 - **Module path.** `github.com/simplycubed/code` becomes
   `github.com/aixgo-dev/code`. Install with
@@ -30,17 +49,25 @@ config at all.
   `SIMPLYCUBED_GH_APP_PRIVATE_KEY`, `SIMPLYCUBED_AZURE_OPENAI_ENDPOINT`,
   `SIMPLYCUBED_AZURE_OPENAI_API_KEY`, `SIMPLYCUBED_GH_APP_LOGIN`,
   `SIMPLYCUBED_DRY_RUN`, and `SIMPLYCUBED_SANDBOX` take the `AIXGO_` prefix. A
-  value read by the old name is not read at all, so a run with the old names set
-  fails on a missing value rather than using a stale one.
+  value read by the old name is not read at all. For the required values that
+  means a run with only the old names set fails on a missing value rather than
+  using a stale one. The optional flags are the sharp edge: an exported
+  `SIMPLYCUBED_DRY_RUN` or `SIMPLYCUBED_SANDBOX` is silently ignored, so a
+  shell that relied on the old dry-run flag performs real writes until the
+  export is renamed.
 - **App name.** The App this repository installs is `aixgo-code`. Adopters keep
   their own App name; `appName:` was already per-adopter and is untouched by the
   rename.
 - **Label prefix.** The default `labelPrefix` is `ax`, so the lifecycle is
-  `ax:go`, `ax:queued`, `ax:working`, `ax:review`, `ax:blocked`, `ax:done`. A
-  repository that wants to keep the old labels can set `labelPrefix: sc`
-  explicitly; `init` creates the new ones and leaves the old ones in place.
+  `ax:go`, `ax:queued`, `ax:working`, `ax:review`, `ax:blocked`, `ax:done`.
+  Adopt the new labels rather than configuring the old ones back:
+  `labelPrefix: sc` still works for CLI-driven runs, but the caller workflow
+  `init` writes triggers on the literal `ax:go`, so an Actions-driven repo set
+  to `sc` would apply `sc:go` and silently start nothing.
 - **Scratch paths.** The per-run scratch directory is `.aixgo/` and the ledger
-  branch is `aixgo/ledger`.
+  branch is `aixgo/ledger`. The ledger starts fresh on the new branch; history
+  from before the upgrade stays readable on the old `simplycubed/ledger`
+  branch, which nothing writes to anymore.
 - **Attribution marker.** Generated commits and pull requests are marked
   `Aixgo Code`.
 

@@ -54,7 +54,7 @@ type Config struct {
 	// SelfLogin is the authenticated identity, used to name it in an
 	// escalation. Empty when the run is a human under their own credential.
 	SelfLogin string
-	// Attribute stamps generated commits and pull requests with a Aixgo
+	// Attribute stamps generated commits and pull requests with an Aixgo
 	// Code marker. The app wires this from the repo config (on by default).
 	Attribute bool
 }
