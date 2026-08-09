@@ -32,9 +32,9 @@ section for it, or any version pin disagrees with it.
 For each tag:
 
 1. Update `CHANGELOG.md`.
-2. Confirm `go install github.com/aixgo-dev/code/cmd/aixgo@<tag>` and
-   `aixgo version` report the same version without the leading `v`.
-3. Update `latestKnownWorkflowTag` in `cmd/aixgo/main.go`, the pins in
+2. Confirm `go install github.com/aixgo-dev/code/cmd/aixgo-code@<tag>` and
+   `aixgo-code version` report the same version without the leading `v`.
+3. Update `latestKnownWorkflowTag` in `cmd/aixgo-code/main.go`, the pins in
    `docs/templates/aixgo-caller.yml`, and the default `version` input in
    `.github/workflows/aixgo.yml`. The release check enforces that all
    three agree with the tag.

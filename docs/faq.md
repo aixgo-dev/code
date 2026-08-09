@@ -10,7 +10,7 @@ For the GitHub Actions runtime, yes. For local development, no.
 
 You can use Aixgo Code two ways:
 
-- as a local CLI (`aixgo run` and `aixgo address`) using your own
+- as a local CLI (`aixgo-code run` and `aixgo-code address`) using your own
   `gh` authentication, which reads the repo config, works in a git worktree,
   runs your gate, and opens or updates a pull request as you;
 - or through the reusable workflow that runs inside your own GitHub Actions, as
@@ -97,7 +97,7 @@ the App's permissions is widened.
 
 ## Are the `ax:` labels created for me?
 
-Yes, once. `aixgo init --workflow` creates the six state labels through
+Yes, once. `aixgo-code init --workflow` creates the six state labels through
 your own `gh` auth, and writes the config, the caller workflow, and the install
 self-test as local files.
 

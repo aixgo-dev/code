@@ -68,7 +68,7 @@ jobs:
 
       - name: Check the repository config
         run: |
-          test -f .github/aixgo.yml || { echo "FAIL: .github/aixgo.yml is missing. Run 'aixgo init'." >&2; exit 1; }
+          test -f .github/aixgo.yml || { echo "FAIL: .github/aixgo.yml is missing. Run 'aixgo-code init'." >&2; exit 1; }
           if ! grep -qE '^gate:[[:space:]]*[^[:space:]]' .github/aixgo.yml; then
             echo "FAIL: no gate command is set. A repository with no gate is refused on purpose." >&2
             exit 1

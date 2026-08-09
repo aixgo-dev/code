@@ -11,11 +11,11 @@ sandbox could not start on an Ubuntu 24.04 runner, so every Actions run escalate
 without proposing anything, and no pull request had ever been opened from
 Actions.
 
-- **Issue to pull request** (`aixgo run <owner/repo#N>`). The implementer
+- **Issue to pull request** (`aixgo-code run <owner/repo#N>`). The implementer
   works in an isolated worktree, retries against the repo's own gate until it
   passes, commits and pushes, and opens a pull request. On a stall it escalates:
   it labels the issue for a human and opens no pull request. It never merges.
-- **Fix on request** (`aixgo address <owner/repo#PR>`). It reads the human
+- **Fix on request** (`aixgo-code address <owner/repo#PR>`). It reads the human
   review feedback on an open pull request; a fixer role addresses it against the
   gate and pushes back to the same branch for another look. Feedback is filtered
   to the current head commit, so an already-addressed comment is never
@@ -31,7 +31,7 @@ Each job mints its own installation token scoped to one repository with
 `contents`, `issues`, and `pull-requests` permissions only.
 
 `v0.1.9` is the current release. `go install
-github.com/aixgo-dev/code/cmd/aixgo@<release-tag>` works today when
+github.com/aixgo-dev/code/cmd/aixgo-code@<release-tag>` works today when
 `<release-tag>` is the release you want to pin, including `v0.1.9`. `v0.1.2`
 and `v0.1.4` are retracted in `go.mod` because those tags pointed at the wrong
 commits.
@@ -51,7 +51,7 @@ first pull request the agent has opened from Actions.
 ## Layers (all green under `make check`)
 
 ```
-cmd/aixgo/      CLI: version, init, preflight, run, address
+cmd/aixgo-code/      CLI: version, init, preflight, run, address
 internal/domain/      core types (Role, Issue, RunRequest, ReviewFeedback, Verdict)
 internal/engine/      Runner interface + fake; codex/ (Azure OpenAI) and claude/ adapters
 internal/gate/        runs the repo gate command; exit code, output tail, signature

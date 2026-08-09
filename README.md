@@ -4,7 +4,7 @@
 
 Aixgo Code is an autonomous coding agent you install into your own GitHub. Your team files an issue, the agent prepares a pull request in your repository, and one of your reviewers decides whether it ships.
 
-> Beta. Current release: `v0.4.0`. Product overview: [aixgo.dev/code](https://aixgo.dev/code?utm_source=github&utm_medium=readme&utm_campaign=code). See [Status](#status).
+> Beta. Current release: `v0.5.0`. Product overview: [aixgo.dev/code](https://aixgo.dev/code?utm_source=github&utm_medium=readme&utm_campaign=code). See [Status](#status).
 
 ## Product overview
 
@@ -32,11 +32,11 @@ Install the pinned release you want to run. Replace `<release-tag>` with the
 version you want from [Releases](https://github.com/aixgo-dev/code/releases):
 
 ```sh
-go install github.com/aixgo-dev/code/cmd/aixgo@<release-tag>
-aixgo version
+go install github.com/aixgo-dev/code/cmd/aixgo-code@<release-tag>
+aixgo-code version
 ```
 
-With `v0.4.0`, that prints `0.4.0`. Pre-1.0 releases follow semver with the
+With `v0.5.0`, that prints `0.5.0`. Pre-1.0 releases follow semver with the
 usual caveat: minor versions may still change behavior. Pin the tag you have
 validated rather than floating on `@latest`.
 
@@ -51,12 +51,12 @@ To run the loop inside your own GitHub Actions:
    Disable the App webhook: the App is an identity that mints per-job tokens, and there is no Aixgo server to receive deliveries.
    Set install visibility to `Any account`.
    Install it on the repo.
-2. In the adopter repo, run `aixgo init --workflow`. That writes `.github/aixgo.yml`, writes `.github/workflows/aixgo.yml` pinned to a released reusable-workflow tag, and creates the `ax:*` labels through your local `gh` auth.
+2. In the adopter repo, run `aixgo-code init --workflow`. That writes `.github/aixgo.yml`, writes `.github/workflows/aixgo.yml` pinned to a released reusable-workflow tag, and creates the `ax:*` labels through your local `gh` auth.
 3. Fill in the real `gate:` in `.github/aixgo.yml`.
 4. Add repository variable `AIXGO_GH_APP_CLIENT_ID` (the App Client ID, the `Iv23` string on the App settings page), repository secret `AIXGO_GH_APP_PRIVATE_KEY`, repository variable `AIXGO_AZURE_OPENAI_ENDPOINT`, and repository secret `AIXGO_AZURE_OPENAI_API_KEY`.
    These are per-repository and are never inherited from Aixgo: a reusable workflow runs with the calling repository's own variables and secrets, so you bring your own Azure endpoint and key, and pay for your own tokens.
    The private key secret must be the full PEM contents, including the `-----BEGIN` and `-----END` lines.
-5. Open a setup pull request in the adopter repo and merge it yourself. Setup files are written locally by `aixgo init` and merged by a human, because the runtime holds no `workflows` permission and cannot add its own workflow files.
+5. Open a setup pull request in the adopter repo and merge it yourself. Setup files are written locally by `aixgo-code init` and merged by a human, because the runtime holds no `workflows` permission and cannot add its own workflow files.
 6. File an issue and apply `ax:go`. Reviews submitted on the resulting pull request call back into the same reusable workflow for the fix-on-request loop.
 
 Each reusable-workflow job mints its own installation token for the current
@@ -107,7 +107,7 @@ The handle is per-repository because App names are globally unique, so every
 installation has its own. It is also why GitHub offers the bot in the
 autocomplete after someone types `@`: it suggests accounts with access to the
 repository, which a fixed prefix could never be. You set it once with
-`aixgo init --app-name`, and it is stored as `appName:` in
+`aixgo-code init --app-name`, and it is stored as `appName:` in
 `.github/aixgo.yml`.
 
 Only comments from people with write access are acted on, and only a comment that begins with the mention counts, so quoting an earlier comment never re-triggers a run. Note that a plain pull-request comment is not a review: to run the fixer from a review, submit it through **Files changed → Review changes**.
@@ -120,8 +120,8 @@ flowchart LR
     V["review submitted<br/>OWNER, MEMBER or COLLABORATOR"] --> A["address job"]
     C["comment starting with<br/>@your-app"] --> P{"verb?"}
 
-    R --> RC["aixgo run"]
-    A --> AC["aixgo address"]
+    R --> RC["aixgo-code run"]
+    A --> AC["aixgo-code address"]
     P -->|"go"| RC
     P -->|"address"| AC
     P -->|"help"| H["prints the commands"]
@@ -136,12 +136,12 @@ A plain comment in the conversation box is not a review. To run the fixer from a
 ## Trying it without letting it write anything
 
 ```sh
-aixgo run owner/repo#12 --dry-run
+aixgo-code run owner/repo#12 --dry-run
 ```
 
 That runs the whole loop, including the model and your own gate. It makes no GitHub writes and never pushes; it prints what it would have done instead.
 
-`aixgo init --workflow` also writes a self-test into your repository. Dispatch it once and it checks, in your own runner, that the App token resolves to a bot, that it can read what it needs, and that it is denied Actions administration. The install fails if that denial does not hold. Delete the workflow once it passes.
+`aixgo-code init --workflow` also writes a self-test into your repository. Dispatch it once and it checks, in your own runner, that the App token resolves to a bot, that it can read what it needs, and that it is denied Actions administration. The install fails if that denial does not hold. Delete the workflow once it passes.
 
 ## Configuration
 
@@ -221,13 +221,13 @@ What that means for customers:
 - It does not use the engines' "dangerous" bypass flags, and does not receive a GitHub token in the model's shell. When a change cannot be made under those constraints, the run stops and a human finishes it. See the [FAQ](docs/faq.md).
 - The agent holds no deploy credentials and has no path to production. The most it can do is open a pull request against a branch. A human and your branch protection rules decide what happens next.
 
-Setup files are generated locally by `aixgo init` and then merged by a human, because the runtime holds no `workflows` permission and cannot add or update workflow files on its own.
+Setup files are generated locally by `aixgo-code init` and then merged by a human, because the runtime holds no `workflows` permission and cannot add or update workflow files on its own.
 
 The GitHub App identity is your own App's `[bot]` account. That bot is the single audit signal for everything the agent does.
 
 ## Status
 
-Beta, and honest about it. Two loops run end to end via the CLI on the Codex-on-Azure engine: issue to pull request, and fix-on-request (a human requests changes, the fixer addresses them and pushes back). `v0.4.0` is the latest release and you should still expect rough edges.
+Beta, and honest about it. Two loops run end to end via the CLI on the Codex-on-Azure engine: issue to pull request, and fix-on-request (a human requests changes, the fixer addresses them and pushes back). `v0.5.0` is the latest release and you should still expect rough edges.
 
 Roadmap, roughly in order:
 

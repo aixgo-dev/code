@@ -37,7 +37,7 @@ flowchart TD
 ## The two tools
 
 **The self-test** runs in your own runner and checks the things a local run
-cannot tell you. `aixgo init --workflow` writes it into your repository.
+cannot tell you. `aixgo-code init --workflow` writes it into your repository.
 
 ```sh
 gh workflow run aixgo-selftest
@@ -49,7 +49,7 @@ result. The push and every GitHub write are skipped, and what would have
 happened is printed instead.
 
 ```sh
-aixgo run owner/repo#12 --dry-run
+aixgo-code run owner/repo#12 --dry-run
 ```
 
 ## The engine sandbox cannot start

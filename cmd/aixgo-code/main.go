@@ -1,8 +1,8 @@
 // Command aixgo is the CLI for Aixgo Code. It runs the same engine
 // the GitHub Action runs, locally, for development and debugging.
 //
-//	aixgo version
-//	aixgo run <owner/repo#N> [flags]
+//	aixgo-code version
+//	aixgo-code run <owner/repo#N> [flags]
 //
 // This is an early scaffold. See STATUS.md.
 package main
@@ -95,12 +95,12 @@ func usage(w io.Writer) {
 	fmt.Fprintf(w, `aixgo %s
 
 usage:
-  aixgo version
-  aixgo init [--repo-dir .] [--workflow]
-  aixgo preflight [--repo-dir .]
-  aixgo command <owner/repo#N> --body "<comment>" [flags]
-  aixgo run <owner/repo#N> [flags]
-  aixgo address <owner/repo#PR> [flags]
+  aixgo-code version
+  aixgo-code init [--repo-dir .] [--workflow]
+  aixgo-code preflight [--repo-dir .]
+  aixgo-code command <owner/repo#N> --body "<comment>" [flags]
+  aixgo-code run <owner/repo#N> [flags]
+  aixgo-code address <owner/repo#PR> [flags]
 
 run drives an issue to a pull request. address runs the fix-on-request loop
 over an open pull request: it reads the human's review feedback and pushes a
@@ -132,7 +132,7 @@ labelPrefix: ax
 # it in the autocomplete after someone types "@".
 #
 # The caller workflow triggers on this same handle. If you rename the App,
-# change it here and re-run "aixgo init --workflow"; preflight fails if
+# change it here and re-run "aixgo-code init --workflow"; preflight fails if
 # the two ever disagree.
 appName: __AIXGO_APP_NAME__
 
@@ -150,7 +150,7 @@ gate:
 `
 
 const (
-	latestKnownWorkflowTag     = "v0.4.0"
+	latestKnownWorkflowTag     = "v0.5.0"
 	callerWorkflowTagToken     = "__AIXGO_TAG__"
 	callerWorkflowAppNameToken = "__AIXGO_APP_NAME__"
 )
@@ -328,7 +328,7 @@ func commandCmd(argv []string, stdout io.Writer) error {
 	case command.Go, command.Address:
 		// A verb aimed at the wrong surface is answered, not run. This lives on
 		// the comment path rather than inside run and address because someone
-		// typing `aixgo address owner/repo#96` at a shell wants an error,
+		// typing `aixgo-code address owner/repo#96` at a shell wants an error,
 		// not a comment posted in their name.
 		a, err := newAnswerer(rest)
 		if err != nil {
@@ -489,7 +489,7 @@ func checkMentionAgreement(repoDir, appName string) error {
 	if len(callers) == 0 {
 		return nil
 	}
-	return fmt.Errorf("%w: .github/aixgo.yml sets appName %q, but %s does not trigger on %s. Comment commands will never fire. Re-run \"aixgo init --workflow\" to rewrite the trigger from the config",
+	return fmt.Errorf("%w: .github/aixgo.yml sets appName %q, but %s does not trigger on %s. Comment commands will never fire. Re-run \"aixgo-code init --workflow\" to rewrite the trigger from the config",
 		ErrConfigMissing, appName, strings.Join(callers, ", "), want)
 }
 
@@ -508,7 +508,7 @@ func preflightCmd(argv []string, stdout io.Writer) error {
 		return err
 	}
 	if cfg.AppName == "" {
-		return fmt.Errorf("%w: .github/aixgo.yml sets no appName. Comment commands address the App you installed, so without it none of them can fire. Add \"appName: <your-app>\" or re-run \"aixgo init --workflow --app-name <your-app>\"", ErrConfigMissing)
+		return fmt.Errorf("%w: .github/aixgo.yml sets no appName. Comment commands address the App you installed, so without it none of them can fire. Add \"appName: <your-app>\" or re-run \"aixgo-code init --workflow --app-name <your-app>\"", ErrConfigMissing)
 	}
 	if err := checkMentionAgreement(*repoDir, cfg.AppName); err != nil {
 		return err

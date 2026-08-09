@@ -48,7 +48,7 @@ on:
         type: string
       version:
         description: Aixgo CLI tag to install.
-        default: v0.4.0
+        default: v0.5.0
         required: false
         type: string
     secrets:
@@ -94,7 +94,7 @@ jobs:
           go-version: "1.26"
 
       - name: Install Aixgo CLI
-        run: go install github.com/aixgo-dev/code/cmd/aixgo@${{ inputs.version }}
+        run: go install github.com/aixgo-dev/code/cmd/aixgo-code@${{ inputs.version }}
 
       - name: Preflight
         env:
@@ -102,7 +102,7 @@ jobs:
           AIXGO_AZURE_OPENAI_API_KEY: ${{ secrets['azure-openai-api-key'] }}
           AIXGO_GH_APP_CLIENT_ID: ${{ inputs['github-app-client-id'] }}
           AIXGO_GH_APP_PRIVATE_KEY: ${{ secrets['github-app-private-key'] }}
-        run: aixgo preflight --repo-dir . --actions
+        run: aixgo-code preflight --repo-dir . --actions
 
       - name: Let the engine sandbox start
         # The engine sandboxes itself with a vendored bubblewrap, and bubblewrap
@@ -143,9 +143,9 @@ jobs:
         # comment asking it NOT to proceed.
         run: |
           if [ -n "${COMMENT_BODY}" ]; then
-            aixgo command ${{ inputs['dry-run'] && '--dry-run' || '' }} --body "${COMMENT_BODY}" "${GITHUB_REPOSITORY}#${{ inputs['issue-number'] }}" --actor "${{ inputs['actor-login'] }}" --model "${{ inputs.model }}" --base "origin/${{ github.event.repository.default_branch }}" --repo-dir .
+            aixgo-code command ${{ inputs['dry-run'] && '--dry-run' || '' }} --body "${COMMENT_BODY}" "${GITHUB_REPOSITORY}#${{ inputs['issue-number'] }}" --actor "${{ inputs['actor-login'] }}" --model "${{ inputs.model }}" --base "origin/${{ github.event.repository.default_branch }}" --repo-dir .
           else
-            aixgo run ${{ inputs['dry-run'] && '--dry-run' || '' }} "${GITHUB_REPOSITORY}#${{ inputs['issue-number'] }}" --actor "${{ inputs['actor-login'] }}" --model "${{ inputs.model }}" --base "origin/${{ github.event.repository.default_branch }}" --repo-dir .
+            aixgo-code run ${{ inputs['dry-run'] && '--dry-run' || '' }} "${GITHUB_REPOSITORY}#${{ inputs['issue-number'] }}" --actor "${{ inputs['actor-login'] }}" --model "${{ inputs.model }}" --base "origin/${{ github.event.repository.default_branch }}" --repo-dir .
           fi
 
   address:
@@ -184,7 +184,7 @@ jobs:
           go-version: "1.26"
 
       - name: Install Aixgo CLI
-        run: go install github.com/aixgo-dev/code/cmd/aixgo@${{ inputs.version }}
+        run: go install github.com/aixgo-dev/code/cmd/aixgo-code@${{ inputs.version }}
 
       - name: Preflight
         env:
@@ -192,7 +192,7 @@ jobs:
           AIXGO_AZURE_OPENAI_API_KEY: ${{ secrets['azure-openai-api-key'] }}
           AIXGO_GH_APP_CLIENT_ID: ${{ inputs['github-app-client-id'] }}
           AIXGO_GH_APP_PRIVATE_KEY: ${{ secrets['github-app-private-key'] }}
-        run: aixgo preflight --repo-dir . --actions
+        run: aixgo-code preflight --repo-dir . --actions
 
       - name: Let the engine sandbox start
         # The engine sandboxes itself with a vendored bubblewrap, and bubblewrap
@@ -224,7 +224,7 @@ jobs:
           COMMENT_BODY: ${{ inputs['comment-body'] }}
         run: |
           if [ -n "${COMMENT_BODY}" ]; then
-            aixgo command ${{ inputs['dry-run'] && '--dry-run' || '' }} --body "${COMMENT_BODY}" "${GITHUB_REPOSITORY}#${{ inputs['pr-number'] }}" --actor "${{ inputs['actor-login'] }}" --model "${{ inputs.model }}" --repo-dir .
+            aixgo-code command ${{ inputs['dry-run'] && '--dry-run' || '' }} --body "${COMMENT_BODY}" "${GITHUB_REPOSITORY}#${{ inputs['pr-number'] }}" --actor "${{ inputs['actor-login'] }}" --model "${{ inputs.model }}" --repo-dir .
           else
-            aixgo address ${{ inputs['dry-run'] && '--dry-run' || '' }} "${GITHUB_REPOSITORY}#${{ inputs['pr-number'] }}" --actor "${{ inputs['actor-login'] }}" --model "${{ inputs.model }}" --repo-dir .
+            aixgo-code address ${{ inputs['dry-run'] && '--dry-run' || '' }} "${GITHUB_REPOSITORY}#${{ inputs['pr-number'] }}" --actor "${{ inputs['actor-login'] }}" --model "${{ inputs.model }}" --repo-dir .
           fi

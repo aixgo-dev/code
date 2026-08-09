@@ -22,7 +22,7 @@ fi
 # and refuses to start the run at all. That combination is the worst one, a green
 # gate and a workflow that never executes, and it is how v0.1.7 shipped with
 # GH_TOKEN and both Azure variables dropped from the step that needs them.
-for f in .github/workflows/*.yml docs/templates/*.yml cmd/aixgo/*.yml.tmpl; do
+for f in .github/workflows/*.yml docs/templates/*.yml cmd/aixgo-code/*.yml.tmpl; do
   [ -e "$f" ] || continue
   # The embedded template carries a placeholder tag that is substituted at
   # render time; it is still valid YAML.
