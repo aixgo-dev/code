@@ -30,7 +30,7 @@ fi
 # <release-tag> with a link to Releases, so they are not pinned here.
 fail=0
 for pin in \
-  "cmd/aixgo/main.go:latestKnownWorkflowTag[[:space:]]*= \"${version}\"" \
+  "cmd/aixgo-code/main.go:latestKnownWorkflowTag[[:space:]]*= \"${version}\"" \
   "docs/templates/aixgo-caller.yml:aixgo.yml@${version}" \
   ".github/workflows/aixgo.yml:default: ${version}" \
   "README.md:Current release: \`${version}\`"

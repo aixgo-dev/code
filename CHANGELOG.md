@@ -3,6 +3,26 @@
 All notable changes are recorded here and summarized again in the matching
 GitHub release notes for each tag.
 
+## v0.5.0
+
+**Breaking. The binary is `aixgo-code`, not `aixgo`.** The Aixgo framework's
+own CLI is already named `aixgo` (`github.com/aixgo-dev/aixgo/cmd/aixgo`,
+v0.7.x), and v0.4.0 took the same name, so `go install` of either tool silently
+overwrote the other in `GOBIN`. Discovered the honest way: running
+`aixgo version` after installing v0.4.0 and getting the framework's answer.
+The coding agent yields the name; the framework had it first and is the
+brand-named flagship.
+
+Install with `go install github.com/aixgo-dev/code/cmd/aixgo-code@v0.5.0`, and
+every CLI invocation gains the suffix: `aixgo-code init`, `aixgo-code
+preflight`, `aixgo-code run`, `aixgo-code address`, `aixgo-code version`.
+
+Nothing else changes. The config file is still `.github/aixgo.yml`, the
+reusable workflow is still `aixgo.yml`, labels are still `ax:*`, the App
+handle is still whatever `appName:` says, and all `AIXGO_*` variables and
+secrets keep their names. A v0.4.0 install keeps working; it is just named
+after the wrong tool on any machine that also uses the framework.
+
 ## v0.4.0
 
 **Breaking. The project moved and was renamed.** The repository is now

@@ -5,7 +5,7 @@ it can turn issues into pull requests inside your own GitHub environment.
 
 You will:
 
-- install the `aixgo` CLI
+- install the `aixgo-code` CLI
 - generate the repository config and GitHub workflow files
 - connect your GitHub App and model credentials
 - run a one-time self-test
@@ -26,16 +26,16 @@ You need:
    [Releases](https://github.com/aixgo-dev/code/releases):
 
 ```sh
-go install github.com/aixgo-dev/code/cmd/aixgo@<release-tag>
-aixgo version
+go install github.com/aixgo-dev/code/cmd/aixgo-code@<release-tag>
+aixgo-code version
 ```
 
-With `v0.4.0`, `aixgo version` prints `0.4.0`.
+With `v0.5.0`, `aixgo-code version` prints `0.5.0`.
 
 2. In the target repository, generate the setup files and labels:
 
 ```sh
-aixgo init --workflow --app-name <your-app>
+aixgo-code init --workflow --app-name <your-app>
 ```
 
 `--app-name` is the GitHub App you created in step 4, without the `[bot]`
@@ -72,7 +72,7 @@ remotely for you.
 
 The App deliberately holds no `workflows` permission, so it cannot change the
 second one. **If you rename your App, change `appName:` and re-run
-`aixgo init --workflow` to rewrite the trigger.** `aixgo preflight`
+`aixgo-code init --workflow` to rewrite the trigger.** `aixgo-code preflight`
 fails when the two disagree, because the alternative is silent: comments would
 simply stop working, with no error anywhere.
 
@@ -93,7 +93,7 @@ with the same config file:
 ```sh
 export AIXGO_AZURE_OPENAI_ENDPOINT="https://<resource>.openai.azure.com"
 export AIXGO_AZURE_OPENAI_API_KEY="<key>"
-aixgo run owner/repo#N --repo-dir .
+aixgo-code run owner/repo#N --repo-dir .
 ```
 
 4. Create and install the GitHub App identity, then add the required repository
@@ -144,7 +144,7 @@ alternative: the reusable workflow accepts App credentials only.
 
 5. Commit the generated config and workflow files in the target repository, open
 a setup pull request, and merge it yourself. Setup files are written locally by
-`aixgo init` and merged by a human, because the runtime holds no
+`aixgo-code init` and merged by a human, because the runtime holds no
 `workflows` permission and cannot add its own workflow files.
 
 6. Run the installation self-test before you rely on the workflow:
@@ -192,7 +192,7 @@ flowchart TB
     subgraph local["Local CLI: you are the identity"]
         L1["your shell<br/>AIXGO_AZURE_OPENAI_ENDPOINT<br/>AIXGO_AZURE_OPENAI_API_KEY"]
         L2["your gh auth"]
-        L3["aixgo run / address"]
+        L3["aixgo-code run / address"]
         L4["commits and PR authored by you"]
         L1 --> L3
         L2 --> L3
@@ -203,7 +203,7 @@ flowchart TB
         A1["repository variables<br/>AIXGO_AZURE_OPENAI_ENDPOINT<br/>AIXGO_GH_APP_CLIENT_ID"]
         A2["repository secrets<br/>AIXGO_AZURE_OPENAI_API_KEY<br/>AIXGO_GH_APP_PRIVATE_KEY"]
         A3["per-job installation token<br/>contents, issues, pull requests"]
-        A4["aixgo run / address"]
+        A4["aixgo-code run / address"]
         A5["commits and PR authored by<br/>your-app-name[bot]"]
         A2 --> A3
         A1 --> A4
@@ -231,10 +231,10 @@ If you do not set a model override, the CLI and reusable workflow default to
 
 ## Where the key lives
 
-The API key lives in different places depending on where `aixgo` runs.
+The API key lives in different places depending on where `aixgo-code` runs.
 
 - Local CLI run: export `AIXGO_AZURE_OPENAI_API_KEY` in the shell that runs
-  `aixgo`. Do not commit it, and do not expect a GitHub repository secret
+  `aixgo-code`. Do not commit it, and do not expect a GitHub repository secret
   to appear in your local terminal.
 - GitHub Actions run: store `AIXGO_AZURE_OPENAI_API_KEY` as a repository secret. The
   caller workflow passes it into the reusable workflow job as an environment
@@ -249,7 +249,7 @@ Use the same endpoint and key in both places, but wire them differently.
 
 ### Local CLI
 
-For local runs such as `aixgo run owner/repo#123`, the CLI reads:
+For local runs such as `aixgo-code run owner/repo#123`, the CLI reads:
 
 - `AIXGO_AZURE_OPENAI_ENDPOINT` from your shell environment
 - `AIXGO_AZURE_OPENAI_API_KEY` from your shell environment
@@ -260,7 +260,7 @@ Example:
 ```sh
 export AIXGO_AZURE_OPENAI_ENDPOINT="https://<resource>.openai.azure.com"
 export AIXGO_AZURE_OPENAI_API_KEY="<key>"
-aixgo run owner/repo#123 --repo-dir .
+aixgo-code run owner/repo#123 --repo-dir .
 ```
 
 To use Claude Code locally instead, set `engine: claude` in
@@ -273,7 +273,7 @@ engine: claude
 ```
 
 ```sh
-aixgo run owner/repo#123 --repo-dir .
+aixgo-code run owner/repo#123 --repo-dir .
 ```
 
 ### GitHub Actions
@@ -291,7 +291,7 @@ passes:
   `github-app-private-key`
 
 The reusable workflow installs the CLI, exports the endpoint and key for the
-job, and runs `aixgo run` or `aixgo address`.
+job, and runs `aixgo-code run` or `aixgo-code address`.
 
 That hosted path is still Codex-on-Azure only. The reusable workflow installs
 the Codex CLI, not the Claude CLI, and its inputs and secrets still require the
@@ -302,7 +302,7 @@ Azure endpoint and API key.
 Two commands answer "is this configured correctly" without changing anything:
 
 ```sh
-aixgo preflight
+aixgo-code preflight
 ```
 
 That validates the repository config and the engine settings and exits. It is
@@ -325,7 +325,7 @@ which also checks the App credentials; a local run authenticates as you and neve
 uses them.
 
 ```sh
-aixgo run owner/repo#N --dry-run
+aixgo-code run owner/repo#N --dry-run
 ```
 
 That runs the whole loop, including the engine and your real gate, and skips
@@ -342,7 +342,7 @@ If your Azure deployment name is not `gpt-5.4`, set it explicitly.
 - Local CLI:
 
   ```sh
-  aixgo run owner/repo#N --repo-dir . --model <deployment-name>
+  aixgo-code run owner/repo#N --repo-dir . --model <deployment-name>
   ```
 - GitHub Actions: uncomment and set `model:` in
   `.github/workflows/aixgo.yml`.

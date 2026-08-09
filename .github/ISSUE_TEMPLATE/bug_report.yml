@@ -26,14 +26,14 @@ body:
     id: repro
     attributes:
       label: Steps to reproduce
-      description: The command you ran (for example `aixgo address owner/repo#12`) and the relevant `.github/aixgo.yml`. Redact anything private.
+      description: The command you ran (for example `aixgo-code address owner/repo#12`) and the relevant `.github/aixgo.yml`. Redact anything private.
     validations:
       required: true
   - type: input
     id: version
     attributes:
       label: Version
-      description: Output of `aixgo version`.
+      description: Output of `aixgo-code version`.
     validations:
       required: true
   - type: dropdown
