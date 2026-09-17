@@ -30,6 +30,7 @@ import (
 	"github.com/aixgo-dev/code/internal/engine"
 	"github.com/aixgo-dev/code/internal/engine/claude"
 	"github.com/aixgo-dev/code/internal/engine/codex"
+	"github.com/aixgo-dev/code/internal/engine/gemini"
 	forge2 "github.com/aixgo-dev/code/internal/forge"
 	"github.com/aixgo-dev/code/internal/forge/dryrun"
 	forgegh "github.com/aixgo-dev/code/internal/forge/gh"
@@ -115,8 +116,11 @@ flags (both commands):
   --state-dir   where worktrees and the generated config live
 
 environment (engine settings; never committed to a repo):
-  AIXGO_AZURE_OPENAI_ENDPOINT   e.g. https://<resource>.openai.azure.com
+  AIXGO_AZURE_OPENAI_ENDPOINT   e.g. https://<resource>.openai.azure.com (codex)
   AIXGO_AZURE_OPENAI_API_KEY    the key, read by name and never written to disk
+  AIXGO_VERTEX_PROJECT          Google Cloud project (gemini / Vertex)
+  AIXGO_VERTEX_LOCATION         Vertex location, default us-central1
+  AIXGO_VERTEX_API_KEY          Vertex API key, read by name and never written to disk
 `, buildinfo.Version)
 }
 
@@ -165,8 +169,28 @@ var selftestWorkflowTemplate string
 // Azure endpoint when the engine needs one. It is the single implementation:
 // `prepare` calls it before a run, and `preflight` calls it so a workflow can
 // fail early without a second copy of these rules written in shell.
+func usesAzure(cfg *config.Config) bool {
+	if cfg == nil {
+		return true
+	}
+	switch cfg.Engine {
+	case "claude", "gemini":
+		return false
+	}
+	return true
+}
+
 func engineEnv(cfg *config.Config) (string, error) {
 	if cfg != nil && cfg.Engine == "claude" {
+		return "", nil
+	}
+	if cfg != nil && cfg.Engine == "gemini" {
+		if err := requireSet("AIXGO_VERTEX_PROJECT", sectionVariable); err != nil {
+			return "", err
+		}
+		if err := requireSet("AIXGO_VERTEX_API_KEY", sectionSecret); err != nil {
+			return "", err
+		}
 		return "", nil
 	}
 	if err := requireSet("AIXGO_AZURE_OPENAI_ENDPOINT", sectionVariable); err != nil {
@@ -246,9 +270,15 @@ func newVCS(self string) *vcsgit.Git {
 // the sandbox start rather than widening it. A run that still cannot sandbox
 // stops and a human finishes the work; it never falls back to running
 // unconfined. See docs/faq.md and the self-test.
-func newRunner(cfg *config.Config, codexHome string) engine.Runner {
+func newRunner(cfg *config.Config, codexHome, model string) engine.Runner {
 	if cfg.Engine == "claude" {
-		return claude.New()
+		return &claude.Runner{Model: model}
+	}
+	if cfg.Engine == "gemini" {
+		if model == "" || model == "gpt-5.4" {
+			model = "gemini-2.5-pro"
+		}
+		return &gemini.Runner{Model: model}
 	}
 	r := codex.New(codexHome)
 	if mode := os.Getenv("AIXGO_SANDBOX"); mode != "" {
@@ -602,7 +632,7 @@ func prepare(name string, argv []string) (*commonFlags, []string, error) {
 	}
 
 	codexHome := filepath.Join(*stateDir, "codex-home")
-	if cfg.Engine != "claude" {
+	if usesAzure(cfg) {
 		if _, err := codex.WriteConfig(codexHome, codex.ProviderConfig{
 			Model:   *model,
 			BaseURL: endpoint + "/openai/v1",
@@ -638,7 +668,7 @@ func prepare(name string, argv []string) (*commonFlags, []string, error) {
 	}
 
 	deps := app.Deps{
-		Runner: newRunner(cfg, codexHome),
+		Runner: newRunner(cfg, codexHome, *model),
 		// Self, when set, filters the agent's own review feedback out of the fix
 		// loop. Empty for local runs, where the operator is a human, not the bot.
 		Forge:                  forgeForLoop,

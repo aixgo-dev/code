@@ -36,8 +36,9 @@ type Config struct {
 	// default) is the plain one-line body; "rich" adds a generated walkthrough,
 	// changes table, and sequence diagram (issue #16). Opt-in until validated.
 	PRDescription string
-	// Engine selects the adapter that writes the code: "codex" (default) or
-	// "claude". The loop, the roles, and the gate are identical either way.
+	// Engine selects the adapter that writes the code: "codex" (default),
+	// "claude", or "gemini". The loop, the roles, and the gate are identical
+	// either way. gemini talks to Vertex AI.
 	Engine string
 	// AppName is the login of the GitHub App this repository installed, without
 	// the "[bot]" suffix. It is what a comment command addresses, so it differs
@@ -93,7 +94,7 @@ func Parse(b []byte) (*Config, error) {
 			c.AppName = strings.TrimSuffix(c.AppName, "[bot]")
 		case "engine":
 			switch strings.ToLower(val) {
-			case "codex", "claude":
+			case "codex", "claude", "gemini":
 				c.Engine = strings.ToLower(val)
 			}
 		case "review":

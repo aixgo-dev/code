@@ -85,7 +85,7 @@ func TestParseEngineSelection(t *testing.T) {
 	if err != nil || c.Engine != "" {
 		t.Fatalf("default Engine = %q err = %v", c.Engine, err)
 	}
-	for in, want := range map[string]string{"claude": "claude", "CODEX": "codex"} {
+	for in, want := range map[string]string{"claude": "claude", "CODEX": "codex", "gemini": "gemini"} {
 		c, err := Parse([]byte("gate: make check\nengine: " + in + "\n"))
 		if err != nil || c.Engine != want {
 			t.Fatalf("engine %q -> %q err = %v", in, c.Engine, err)

@@ -9,6 +9,7 @@ import (
 	"github.com/aixgo-dev/code/internal/domain"
 	"github.com/aixgo-dev/code/internal/engine/claude"
 	"github.com/aixgo-dev/code/internal/engine/codex"
+	"github.com/aixgo-dev/code/internal/engine/gemini"
 	forge2 "github.com/aixgo-dev/code/internal/forge"
 	"github.com/aixgo-dev/code/internal/forge/dryrun"
 	forgefake "github.com/aixgo-dev/code/internal/forge/fake"
@@ -462,6 +463,25 @@ func TestEngineEnvSkipsAzureForClaude(t *testing.T) {
 	}
 }
 
+func TestEngineEnvRequiresVertexForGemini(t *testing.T) {
+	t.Setenv("AIXGO_AZURE_OPENAI_ENDPOINT", "")
+	t.Setenv("AIXGO_AZURE_OPENAI_API_KEY", "")
+	t.Setenv("AIXGO_VERTEX_PROJECT", "")
+	t.Setenv("AIXGO_VERTEX_API_KEY", "")
+	if _, err := engineEnv(&config.Config{Engine: "gemini"}); err == nil || !strings.Contains(err.Error(), "AIXGO_VERTEX_PROJECT") {
+		t.Fatal("gemini without a project must name AIXGO_VERTEX_PROJECT")
+	}
+	t.Setenv("AIXGO_VERTEX_PROJECT", "simplycubed-agents")
+	if _, err := engineEnv(&config.Config{Engine: "gemini"}); err == nil || !strings.Contains(err.Error(), "AIXGO_VERTEX_API_KEY") {
+		t.Fatal("gemini without a key must name AIXGO_VERTEX_API_KEY")
+	}
+	t.Setenv("AIXGO_VERTEX_API_KEY", "k")
+	got, err := engineEnv(&config.Config{Engine: "gemini"})
+	if err != nil || got != "" {
+		t.Fatalf("engineEnv(gemini) = %q, %v", got, err)
+	}
+}
+
 func TestPreflightCmd(t *testing.T) {
 	t.Run("reports ok when config and engine settings are present", func(t *testing.T) {
 		t.Setenv("AIXGO_AZURE_OPENAI_ENDPOINT", "https://r.openai.azure.com")
@@ -480,6 +500,20 @@ func TestPreflightCmd(t *testing.T) {
 		t.Setenv("AIXGO_AZURE_OPENAI_API_KEY", "")
 		var out bytes.Buffer
 		if err := preflightCmd([]string{"--repo-dir", repoWithConfigBody(t, "gate: make check\nengine: claude\nappName: acme-code\n")}, &out); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !strings.Contains(out.String(), "preflight ok") {
+			t.Fatalf("output = %q", out.String())
+		}
+	})
+
+	t.Run("allows gemini with Vertex settings and no Azure", func(t *testing.T) {
+		t.Setenv("AIXGO_AZURE_OPENAI_ENDPOINT", "")
+		t.Setenv("AIXGO_AZURE_OPENAI_API_KEY", "")
+		t.Setenv("AIXGO_VERTEX_PROJECT", "simplycubed-agents")
+		t.Setenv("AIXGO_VERTEX_API_KEY", "k")
+		var out bytes.Buffer
+		if err := preflightCmd([]string{"--repo-dir", repoWithConfigBody(t, "gate: make check\nengine: gemini\nappName: acme-code\n")}, &out); err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
 		if !strings.Contains(out.String(), "preflight ok") {
@@ -670,6 +704,24 @@ func TestPrepare(t *testing.T) {
 		}
 		if _, err := os.Stat(filepath.Join(stateDir, "codex-home", "config.toml")); !errors.Is(err, os.ErrNotExist) {
 			t.Fatalf("claude runs must not render a codex config, stat err = %v", err)
+		}
+	})
+
+	t.Run("allows gemini with Vertex settings and skips codex config", func(t *testing.T) {
+		t.Setenv("AIXGO_AZURE_OPENAI_ENDPOINT", "")
+		t.Setenv("AIXGO_AZURE_OPENAI_API_KEY", "")
+		t.Setenv("AIXGO_VERTEX_PROJECT", "simplycubed-agents")
+		t.Setenv("AIXGO_VERTEX_API_KEY", "k")
+		stateDir := t.TempDir()
+		c, _, err := prepare("run", []string{"--repo-dir", repoWithConfigBody(t, "gate: make check\nengine: gemini\nappName: acme-code\n"), "--state-dir", stateDir})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if _, ok := c.deps.Runner.(*gemini.Runner); !ok {
+			t.Fatalf("expected the Gemini runner, got %#v", c.deps.Runner)
+		}
+		if _, err := os.Stat(filepath.Join(stateDir, "codex-home", "config.toml")); !errors.Is(err, os.ErrNotExist) {
+			t.Fatalf("gemini runs must not render a codex config, stat err = %v", err)
 		}
 	})
 
@@ -1017,15 +1069,30 @@ func TestCommandCmdRejectsABodyFlagWithNoValue(t *testing.T) {
 // Engine selection is a documented config key and had no test. The default
 // matters most: an existing repository must keep the engine it already had.
 func TestNewRunnerSelectsTheEngine(t *testing.T) {
-	if _, ok := newRunner(&config.Config{}, t.TempDir()).(*codex.Runner); !ok {
+	if _, ok := newRunner(&config.Config{}, t.TempDir(), "").(*codex.Runner); !ok {
 		t.Fatal("the default engine must be codex")
 	}
-	if _, ok := newRunner(&config.Config{Engine: "claude"}, t.TempDir()).(*claude.Runner); !ok {
+	if _, ok := newRunner(&config.Config{Engine: "claude"}, t.TempDir(), "").(*claude.Runner); !ok {
 		t.Fatal("engine: claude must select the Claude adapter")
+	}
+	g, ok := newRunner(&config.Config{Engine: "gemini"}, t.TempDir(), "").(*gemini.Runner)
+	if !ok {
+		t.Fatal("engine: gemini must select the Gemini adapter")
+	}
+	if g.Model != "gemini-2.5-pro" {
+		t.Fatalf("gemini default model = %q, want gemini-2.5-pro", g.Model)
+	}
+	g2, _ := newRunner(&config.Config{Engine: "gemini"}, t.TempDir(), "gpt-5.4").(*gemini.Runner)
+	if g2.Model != "gemini-2.5-pro" {
+		t.Fatalf("the Codex default must not be forwarded to Gemini: %q", g2.Model)
+	}
+	g3, _ := newRunner(&config.Config{Engine: "gemini"}, t.TempDir(), "gemini-2.5-flash").(*gemini.Runner)
+	if g3.Model != "gemini-2.5-flash" {
+		t.Fatalf("an explicit gemini model must be kept: %q", g3.Model)
 	}
 	// An unrecognised engine falls back rather than failing later with an
 	// error that says nothing about the cause.
-	if _, ok := newRunner(&config.Config{Engine: "nope"}, t.TempDir()).(*codex.Runner); !ok {
+	if _, ok := newRunner(&config.Config{Engine: "nope"}, t.TempDir(), "").(*codex.Runner); !ok {
 		t.Fatal("an unknown engine must fall back to the default")
 	}
 }
@@ -1034,7 +1101,7 @@ func TestNewRunnerSelectsTheEngine(t *testing.T) {
 // widen it themselves. Nothing in this repository sets it, so the test asserts
 // both that the default is untouched and that an explicit value is honoured.
 func TestNewRunnerHonoursTheSandboxOverride(t *testing.T) {
-	r, ok := newRunner(&config.Config{}, t.TempDir()).(*codex.Runner)
+	r, ok := newRunner(&config.Config{}, t.TempDir(), "").(*codex.Runner)
 	if !ok {
 		t.Fatal("expected the codex runner")
 	}
@@ -1042,7 +1109,7 @@ func TestNewRunnerHonoursTheSandboxOverride(t *testing.T) {
 		t.Fatalf("the sandbox must stay on by default, got %q", r.Sandbox)
 	}
 	t.Setenv("AIXGO_SANDBOX", "read-only")
-	r2, _ := newRunner(&config.Config{}, t.TempDir()).(*codex.Runner)
+	r2, _ := newRunner(&config.Config{}, t.TempDir(), "").(*codex.Runner)
 	if r2.Sandbox != "read-only" {
 		t.Fatalf("an explicit sandbox mode must be honoured, got %q", r2.Sandbox)
 	}

@@ -3,6 +3,18 @@
 All notable changes are recorded here and summarized again in the matching
 GitHub release notes for each tag.
 
+## Unreleased
+
+- **Gemini on Vertex AI** (`engine: gemini`). The loop, roles, and gate are
+  unchanged. The adapter shells out to the Gemini CLI (`gemini -p`) and reads
+  `AIXGO_VERTEX_PROJECT`, `AIXGO_VERTEX_LOCATION` (default `us-central1`), and
+  `AIXGO_VERTEX_API_KEY`. Azure credentials are not required on this path.
+- The reusable workflow accepts optional `vertex-project`, `vertex-location`,
+  and `vertex-api-key`, and the Azure endpoint/key are no longer required
+  inputs. A Codex adopter who already passes them is unchanged. A Gemini
+  adopter omits Azure and passes the Vertex values instead. The workflow
+  installs `@google/gemini-cli@0.60.0` when `vertex-project` is set.
+
 ## v0.5.0
 
 **Breaking. The binary is `aixgo-code`, not `aixgo`.** The Aixgo framework's
