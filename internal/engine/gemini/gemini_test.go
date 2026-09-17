@@ -116,6 +116,44 @@ func TestRunExportsVertexSettingsForTheGeminiCLI(t *testing.T) {
 	}
 }
 
+const echoADC = `#!/bin/sh
+printf '%s\n%s\n' "$GOOGLE_API_KEY" "$GOOGLE_APPLICATION_CREDENTIALS"
+if [ -n "$GOOGLE_APPLICATION_CREDENTIALS" ]; then
+  cat "$GOOGLE_APPLICATION_CREDENTIALS"
+fi
+exit 0
+`
+
+const saJSON = `{"type":"service_account","project_id":"simplycubed-agents","client_email":"vertex@simplycubed-agents.iam.gserviceaccount.com"}`
+
+func TestRunTreatsServiceAccountJSONAsADC(t *testing.T) {
+	work := t.TempDir()
+	t.Setenv("AIXGO_VERTEX_PROJECT", "simplycubed-agents")
+	t.Setenv("AIXGO_VERTEX_API_KEY", saJSON)
+	r := New()
+	r.Bin = writeFakeGemini(t, echoADC)
+	res, err := r.Run(context.Background(), domain.RunRequest{
+		Role: domain.RoleImplementer, WorkDir: work, Prompt: "x",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	lines := strings.SplitN(res.Summary, "\n", 2)
+	if len(lines) < 2 {
+		t.Fatalf("summary = %q", res.Summary)
+	}
+	creds := lines[0]
+	if creds == "" || strings.HasPrefix(creds, "{") {
+		t.Fatalf("GOOGLE_APPLICATION_CREDENTIALS must be a file path, not the JSON, got %q", creds)
+	}
+	if strings.HasPrefix(creds, work) {
+		t.Fatalf("the key file must not live in the worktree, got %q", creds)
+	}
+	if !strings.Contains(lines[1], `"type":"service_account"`) {
+		t.Fatalf("the key file should contain the service account JSON, got %q", res.Summary)
+	}
+}
+
 func TestRunDefaultsLocationWhenUnset(t *testing.T) {
 	t.Setenv("AIXGO_VERTEX_PROJECT", "p")
 	t.Setenv("AIXGO_VERTEX_LOCATION", "")

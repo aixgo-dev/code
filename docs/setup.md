@@ -289,7 +289,9 @@ engine: gemini
 ```sh
 export AIXGO_VERTEX_PROJECT="<project>"
 export AIXGO_VERTEX_LOCATION="us-central1"   # optional, this is the default
-export AIXGO_VERTEX_API_KEY="<key>"
+# Either a Vertex API key, or the contents of a service-account JSON key
+# (a value starting with {"type":"service_account"...} is used as ADC).
+export AIXGO_VERTEX_API_KEY="<key-or-sa.json-contents>"
 aixgo-code run owner/repo#123 --repo-dir .
 ```
 

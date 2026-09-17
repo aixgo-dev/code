@@ -12,6 +12,7 @@ package gemini
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -53,6 +54,12 @@ func (r *Runner) Run(ctx context.Context, req domain.RunRequest) (domain.RunResu
 		return domain.RunResult{Role: req.Role, Err: err}, err
 	}
 
+	credsPath, cleanup, err := materializeVertexCreds()
+	if err != nil {
+		return domain.RunResult{Role: req.Role, Err: err}, err
+	}
+	defer cleanup()
+
 	args := []string{"-p", req.Prompt, "--output-format", "text", "-y"}
 	model := req.Model
 	if model == "" {
@@ -64,7 +71,7 @@ func (r *Runner) Run(ctx context.Context, req domain.RunRequest) (domain.RunResu
 
 	cmd := exec.CommandContext(ctx, r.bin(), args...)
 	cmd.Dir = req.WorkDir
-	cmd.Env = r.childEnv(req.WorkDir)
+	cmd.Env = r.childEnv(req.WorkDir, credsPath)
 	out, runErr := cmd.CombinedOutput()
 
 	res := domain.RunResult{Role: req.Role, Summary: tail(strings.TrimSpace(string(out)), 40)}
@@ -78,10 +85,11 @@ func (r *Runner) Run(ctx context.Context, req domain.RunRequest) (domain.RunResu
 // childEnv builds the child environment. It mirrors the other adapters for the
 // Go caches, and translates the AIXGO_VERTEX_* names into the names the Gemini
 // CLI reads for Vertex.
-func (r *Runner) childEnv(workDir string) []string {
+func (r *Runner) childEnv(workDir, credsPath string) []string {
 	env := filterEnvKeys(os.Environ(),
 		"GOCACHE", "GOPATH", "GH_TOKEN", "GITHUB_TOKEN",
-		"GOOGLE_GENAI_USE_VERTEXAI", "GOOGLE_CLOUD_PROJECT", "GOOGLE_CLOUD_LOCATION", "GOOGLE_API_KEY",
+		"GOOGLE_GENAI_USE_VERTEXAI", "GOOGLE_CLOUD_PROJECT", "GOOGLE_CLOUD_LOCATION",
+		"GOOGLE_API_KEY", "GOOGLE_APPLICATION_CREDENTIALS",
 	)
 	env = append(env, r.ExtraEnv...)
 	if !hasEnvKey(r.ExtraEnv, "GOCACHE") {
@@ -103,10 +111,49 @@ func (r *Runner) childEnv(workDir string) []string {
 		loc = defaultLocation
 	}
 	env = append(env, "GOOGLE_CLOUD_LOCATION="+loc)
-	if k := strings.TrimSpace(os.Getenv("AIXGO_VERTEX_API_KEY")); k != "" {
+	if credsPath != "" {
+		env = append(env, "GOOGLE_APPLICATION_CREDENTIALS="+credsPath)
+	} else if k := strings.TrimSpace(os.Getenv("AIXGO_VERTEX_API_KEY")); k != "" {
 		env = append(env, "GOOGLE_API_KEY="+k)
 	}
 	return env
+}
+
+// materializeVertexCreds writes a service-account JSON from AIXGO_VERTEX_API_KEY
+// to a temp file outside the worktree. A plain API key is left in the env and
+// handled by childEnv. The file is 0600 and must be removed by the caller.
+func materializeVertexCreds() (string, func(), error) {
+	noop := func() {}
+	raw := strings.TrimSpace(os.Getenv("AIXGO_VERTEX_API_KEY"))
+	if raw == "" || !isServiceAccountJSON(raw) {
+		return "", noop, nil
+	}
+	f, err := os.CreateTemp("", "aixgo-vertex-sa-*.json")
+	if err != nil {
+		return "", noop, fmt.Errorf("gemini: write service account key: %w", err)
+	}
+	path := f.Name()
+	cleanup := func() { _ = os.Remove(path) }
+	if _, err := f.WriteString(raw); err != nil {
+		_ = f.Close()
+		cleanup()
+		return "", noop, fmt.Errorf("gemini: write service account key: %w", err)
+	}
+	if err := f.Close(); err != nil {
+		cleanup()
+		return "", noop, fmt.Errorf("gemini: write service account key: %w", err)
+	}
+	return path, cleanup, nil
+}
+
+func isServiceAccountJSON(s string) bool {
+	var doc struct {
+		Type string `json:"type"`
+	}
+	if err := json.Unmarshal([]byte(s), &doc); err != nil {
+		return false
+	}
+	return doc.Type == "service_account"
 }
 
 func filterEnvKeys(env []string, keys ...string) []string {
