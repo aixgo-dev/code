@@ -249,7 +249,7 @@ export AIXGO_VERTEX_LOCATION="us-central1"   # optional
 export AIXGO_VERTEX_API_KEY="<key-or-sa-json>"
 ```
 
-In GitHub Actions, pass reusable-workflow inputs `vertex-project`, `vertex-location`, and secret `vertex-api-key` instead of Azure. The workflow installs `@google/gemini-cli` when `vertex-project` is set. Default model is `gemini-2.5-pro` (override with `--model` / workflow `model:`).
+In GitHub Actions, pass reusable-workflow inputs `vertex-project`, `vertex-location`, and secret `vertex-api-key` instead of Azure. The workflow installs `@google/gemini-cli` when `vertex-project` is set. Default model is `gemini-3.5-flash` (override with `--model` / workflow `model:`).
 
 ## Deployment model
 

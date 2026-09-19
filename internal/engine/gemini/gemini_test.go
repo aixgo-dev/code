@@ -34,12 +34,12 @@ func TestRunPassesThePromptAndModel(t *testing.T) {
 	r.Bin = writeFakeGemini(t, echoArgs)
 	res, err := r.Run(context.Background(), domain.RunRequest{
 		Role: domain.RoleImplementer, WorkDir: t.TempDir(),
-		Prompt: "do the thing", Model: "gemini-2.5-pro",
+		Prompt: "do the thing", Model: "gemini-3.5-flash",
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	for _, want := range []string{"-p", "do the thing", "-m", "gemini-2.5-pro"} {
+	for _, want := range []string{"-p", "do the thing", "-m", "gemini-3.5-flash"} {
 		if !strings.Contains(res.Summary, want) {
 			t.Fatalf("args missing %q: %s", want, res.Summary)
 		}

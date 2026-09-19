@@ -229,7 +229,7 @@ func newRunner(cfg *config.Config, codexHome, model string) engine.Runner {
 	}
 	if cfg.Engine == "gemini" {
 		if model == "" || model == "gpt-5.4" {
-			model = "gemini-2.5-pro"
+			model = "gemini-3.5-flash"
 		}
 		return &gemini.Runner{Model: model}
 	}
