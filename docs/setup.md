@@ -44,7 +44,17 @@ With `v0.5.0`, `aixgo-code version` prints `0.5.0`.
 
 ```sh
 aixgo-code init --workflow --app-name <your-app>
+# or non-interactive / CI:
+aixgo-code init --workflow --app-name <your-app> --engine gemini
 ```
+
+On a TTY, init shows a short menu (1 Codex/Azure, 2 Gemini/Vertex, 3 Claude).
+Pass `--engine codex|gemini|claude` to skip it. Without a TTY and without
+`--engine`, it defaults to `codex` and prints one line saying so, so existing
+scripts keep working. The starter `.github/aixgo.yml` gets `engine: <chosen>`,
+and the caller workflow only wires that engine's credentials (not a
+multi-provider starter that always shows Azure). Existing starter files are
+left unchanged; pass `--force` to overwrite them when switching providers.
 
 `--app-name` is the GitHub App you created in step 4, without the `[bot]`
 suffix. **It is required, and it is yours, not ours.** App names are globally
@@ -134,12 +144,17 @@ App on the repository from `Install App`.
 
 Then add these repository settings. **Variables and Secrets are different tabs**
 under Settings > Secrets and variables > Actions, and a value filed under the
-wrong one reads back as empty rather than failing:
+wrong one reads back as empty rather than failing. Always set:
 
 - Variable: `AIXGO_GH_APP_CLIENT_ID`, the App Client ID, the `Iv23` string on the App settings page
 - Secret: `AIXGO_GH_APP_PRIVATE_KEY`
-- Variable: `AIXGO_AZURE_OPENAI_ENDPOINT`
-- Secret: `AIXGO_AZURE_OPENAI_API_KEY`
+
+Plus the credentials for the engine `init` chose (it prints them in next steps):
+
+- **Codex:** variable `AIXGO_AZURE_OPENAI_ENDPOINT`, secret `AIXGO_AZURE_OPENAI_API_KEY`
+- **Gemini:** variables `AIXGO_VERTEX_PROJECT` and optional `AIXGO_VERTEX_LOCATION`, secret `AIXGO_VERTEX_API_KEY`
+- **Claude:** local CLI auth today; Actions Anthropic wiring is tracked in
+  [aixgo-dev/code#147](https://github.com/aixgo-dev/code/issues/147)
 
 The Actions runtime authenticates as your App, so the Client ID and private key
 are both required. Store the private key as the full PEM contents, including the
@@ -304,27 +319,27 @@ aixgo-code run owner/repo#123 --repo-dir .
 
 ### GitHub Actions
 
-For the hosted-in-your-GitHub path, the caller workflow in your repository
-passes:
+`aixgo-code init --workflow` writes a **conditional** caller: only the chosen
+engine's inputs and secrets appear. Always included:
 
-- `vars.AIXGO_AZURE_OPENAI_ENDPOINT` to the reusable workflow input
-  `azure-openai-endpoint`
-- `secrets.AIXGO_AZURE_OPENAI_API_KEY` to the reusable workflow secret
-  `azure-openai-api-key`
-- `vars.AIXGO_GH_APP_CLIENT_ID` to the reusable workflow input
-  `github-app-client-id`
-- `secrets.AIXGO_GH_APP_PRIVATE_KEY` to the reusable workflow secret
-  `github-app-private-key`
+- `vars.AIXGO_GH_APP_CLIENT_ID` → `github-app-client-id`
+- `secrets.AIXGO_GH_APP_PRIVATE_KEY` → `github-app-private-key`
 
-The reusable workflow installs the CLI, exports the endpoint and key for the
-job, and runs `aixgo-code run` or `aixgo-code address`.
+Plus, depending on `--engine` / the menu choice:
 
-The hosted path follows `.github/aixgo.yml` `engine:`. Codex (the default)
-still needs the Azure endpoint and key, and the workflow installs the Codex
-CLI. `engine: gemini` needs `vertex-project`, `vertex-location`, and
-`vertex-api-key` instead, and the workflow installs the Gemini CLI. Claude
-is still a local-CLI path; the reusable workflow does not install the Claude
-CLI.
+- **Codex:** `azure-openai-endpoint` / `azure-openai-api-key` (Azure vars/secrets)
+- **Gemini:** `vertex-project`, `vertex-location` / `vertex-api-key`
+- **Claude:** App credentials only, with a comment that Actions Claude install
+  is not wired yet ([#147](https://github.com/aixgo-dev/code/issues/147)); use
+  the local CLI for Claude until then
+
+The reusable workflow (`.github/workflows/aixgo.yml` in this repository) stays
+multi-engine with gated installs: Codex when `azure-openai-endpoint` is set,
+Gemini when `vertex-project` is set. The adopter caller template from `init` is
+what becomes single-engine.
+
+The hosted path follows `.github/aixgo.yml` `engine:`. Codex needs Azure;
+`engine: gemini` needs Vertex; Claude remains a local-CLI path until #147.
 
 ## Watching it run before it writes
 
