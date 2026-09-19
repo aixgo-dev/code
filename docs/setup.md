@@ -38,7 +38,7 @@ go install github.com/aixgo-dev/code/cmd/aixgo-code@<release-tag>
 aixgo-code version
 ```
 
-With `v0.6.0`, `aixgo-code version` prints `0.6.0`.
+With `v0.6.1`, `aixgo-code version` prints `0.6.1`.
 
 2. In the target repository, generate the setup files and labels:
 
