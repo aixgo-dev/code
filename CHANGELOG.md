@@ -5,6 +5,17 @@ GitHub release notes for each tag.
 
 ## Unreleased
 
+## v0.6.1
+
+- **Headless Gemini folder trust.** The Gemini adapter sets
+  `GEMINI_CLI_TRUST_WORKSPACE=true` unless the caller already overrides it.
+  `@google/gemini-cli@0.60.0` defaults folder trust on; without this, Actions
+  checkouts hit `FatalUntrustedWorkspaceError` and exit **55** (Sync dogfood
+  and code#147). `-y` does not bypass that gate. Engine errors now include a
+  short CLI output tail so bot comments are actionable.
+- **Default Gemini model** remaps empty / `gpt-5.4` to `gemini-3.5-flash`
+  (was `gemini-2.5-pro`).
+
 ## v0.6.0
 
 - **Gemini on Vertex AI** (`engine: gemini`). The loop, roles, and gate are

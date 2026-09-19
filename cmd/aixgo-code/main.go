@@ -145,7 +145,7 @@ gate:
 `
 
 const (
-	latestKnownWorkflowTag     = "v0.6.0"
+	latestKnownWorkflowTag     = "v0.6.1"
 	callerWorkflowTagToken     = "__AIXGO_TAG__"
 	callerWorkflowAppNameToken = "__AIXGO_APP_NAME__"
 )
