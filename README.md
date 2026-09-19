@@ -65,10 +65,10 @@ To run the loop inside your own GitHub Actions:
    Disable the App webhook: the App is an identity that mints per-job tokens, and there is no Aixgo server to receive deliveries.
    Set install visibility to `Any account`.
    Install it on the repo.
-2. In the adopter repo, run `aixgo-code init --workflow`. That writes `.github/aixgo.yml`, writes `.github/workflows/aixgo.yml` pinned to a released reusable-workflow tag, and creates the `ax:*` labels through your local `gh` auth.
+2. In the adopter repo, run `aixgo-code init --workflow --app-name <your-app>`. Interactively (TTY), init asks which engine to use; pass `--engine codex|gemini|claude` to skip the menu. Non-interactive runs default to `codex` and print that default. That writes `.github/aixgo.yml` with `engine:`, writes a **conditional** `.github/workflows/aixgo.yml` that only wires credentials for the chosen engine (pinned to a released reusable-workflow tag), and creates the `ax:*` labels through your local `gh` auth. Existing starter files are left unchanged; pass `--force` to overwrite (for example to switch engines).
 3. Fill in the real `gate:` in `.github/aixgo.yml`.
-4. Add repository variable `AIXGO_GH_APP_CLIENT_ID` (the App Client ID, the `Iv23` string on the App settings page), repository secret `AIXGO_GH_APP_PRIVATE_KEY`, repository variable `AIXGO_AZURE_OPENAI_ENDPOINT`, and repository secret `AIXGO_AZURE_OPENAI_API_KEY`.
-   These are per-repository and are never inherited from Aixgo: a reusable workflow runs with the calling repository's own variables and secrets, so you bring your own Azure endpoint and key, and pay for your own tokens.
+4. Add repository variable `AIXGO_GH_APP_CLIENT_ID` (the App Client ID, the `Iv23` string on the App settings page) and repository secret `AIXGO_GH_APP_PRIVATE_KEY`, plus the engine credentials init listed for your choice (Azure for Codex, Vertex for Gemini; Claude is local-CLI today — Actions wiring tracked in [#147](https://github.com/aixgo-dev/code/issues/147)).
+   These are per-repository and are never inherited from Aixgo: a reusable workflow runs with the calling repository's own variables and secrets.
    The private key secret must be the full PEM contents, including the `-----BEGIN` and `-----END` lines.
 5. Open a setup pull request in the adopter repo and merge it yourself. Setup files are written locally by `aixgo-code init` and merged by a human, because the runtime holds no `workflows` permission and cannot add its own workflow files.
 6. File an issue and apply `ax:go`. Reviews submitted on the resulting pull request call back into the same reusable workflow for the fix-on-request loop.
@@ -201,7 +201,7 @@ Getting the gate right is where first runs stall: it has to be green on your own
 
 ## Engines
 
-The model that writes the code sits behind a pluggable `Runner` interface, so you bring your own provider. Set `engine:` in [`.github/aixgo.yml`](#configuration). The loop, roles, and gate are identical for every engine.
+The model that writes the code sits behind a pluggable `Runner` interface, so you bring your own provider. `aixgo-code init` chooses the engine (`--engine` or an interactive menu) and writes `engine:` into [`.github/aixgo.yml`](#configuration) plus a caller workflow that only passes that provider's inputs/secrets. You can also set `engine:` by hand. The loop, roles, and gate are identical for every engine.
 
 | Engine | Config | Local CLI | GitHub Actions | Credentials |
 | --- | --- | --- | --- | --- |
