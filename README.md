@@ -6,6 +6,20 @@ Aixgo Code is an autonomous coding agent you install into your own GitHub. Your 
 
 > Beta. Current release: `v0.5.0`. Product overview: [aixgo.dev/code](https://aixgo.dev/code?utm_source=github&utm_medium=readme&utm_campaign=code). See [Status](#status).
 
+
+## Contents
+
+- [Product overview](#product-overview)
+- [Why teams use it](#why-teams-use-it)
+- [Installation](#installation)
+- [How it works](#how-it-works)
+- [Configuration](#configuration) — `.github/aixgo.yml` options
+- [Engines](#engines) — Codex (Azure), Claude, Gemini (Vertex): required env vars
+- [Deployment model](#deployment-model)
+- [Status](#status)
+- [Security](#security)
+- [Full setup walkthrough](docs/setup.md)
+
 ## Product overview
 
 Aixgo Code turns a GitHub issue into a proposed code change inside your own environment. Your team keeps the repository, runners, secrets, and branch protection rules. The agent does the implementation work, but it never merges its own pull requests.
@@ -145,7 +159,9 @@ That runs the whole loop, including the model and your own gate. It makes no Git
 
 ## Configuration
 
-Configuration lives in `.github/aixgo.yml`. A minimal file looks like this:
+Configuration lives in `.github/aixgo.yml`. Engine credentials are **environment variables or Actions secrets**, never committed — see [Engines](#engines) for the table, and [docs/setup.md](docs/setup.md) for the full walkthrough.
+
+A minimal file looks like this:
 
 ```yaml
 labelPrefix: ax
@@ -185,17 +201,55 @@ Getting the gate right is where first runs stall: it has to be green on your own
 
 ## Engines
 
-The model that writes the code sits behind a pluggable `Runner` interface, so you bring your own provider.
+The model that writes the code sits behind a pluggable `Runner` interface, so you bring your own provider. Set `engine:` in [`.github/aixgo.yml`](#configuration). The loop, roles, and gate are identical for every engine.
 
-Codex on Azure is the engine the reusable GitHub Actions workflow can run today. `engine: claude` selects the Claude Code adapter, which runs headless (`claude -p`) against whatever credentials that CLI is already configured with. That path now works for local CLI runs and does not need Azure variables, but the reusable workflow still installs only the Codex CLI and still requires Azure inputs and secrets, so GitHub Actions cannot use Claude yet. The loop, the roles, and the gate are identical either way; the engine is the only thing that changes.
+| Engine | Config | Local CLI | GitHub Actions | Credentials |
+| --- | --- | --- | --- | --- |
+| **codex** (default) | omit `engine:` or `engine: codex` | yes | yes | `AIXGO_AZURE_OPENAI_ENDPOINT`, `AIXGO_AZURE_OPENAI_API_KEY` |
+| **claude** | `engine: claude` | yes | not yet (workflow does not install Claude CLI) | your existing `claude` CLI auth |
+| **gemini** | `engine: gemini` | yes | yes | `AIXGO_VERTEX_PROJECT`, `AIXGO_VERTEX_API_KEY`, optional `AIXGO_VERTEX_LOCATION` (default `us-central1`) |
+
+Full install steps and Actions wiring: [docs/setup.md](docs/setup.md) (see *Local CLI* / *GitHub Actions* under engine choice).
+
+### Codex on Azure (default)
 
 ```yaml
 gate: make check
+# engine: codex
+```
 
+```sh
+export AIXGO_AZURE_OPENAI_ENDPOINT="https://<resource>.openai.azure.com"
+export AIXGO_AZURE_OPENAI_API_KEY="<key>"
+```
+
+Optional model override defaults to `gpt-5.4` if unset.
+
+### Claude (local CLI)
+
+```yaml
+gate: make check
 engine: claude
 ```
 
-The first engine adapter targets the Codex CLI running against Azure OpenAI. Today the shipped GitHub Actions setup needs an Azure endpoint, an API key, and optionally a deployment name override if you are not using the default `gpt-5.4`. The Claude Code adapter is written and tested behind `engine: claude`, and today is reachable from a local CLI run only. The `Runner` interface is the seam where other engines plug in.
+Uses headless `claude -p` with whatever credentials that CLI already has. No Azure variables.
+
+### Gemini on Vertex AI
+
+```yaml
+gate: make check
+engine: gemini
+```
+
+```sh
+export AIXGO_VERTEX_PROJECT="<gcp-project>"
+export AIXGO_VERTEX_LOCATION="us-central1"   # optional
+# Plain Vertex API key, OR the full contents of a service-account JSON key
+# (JSON with "type":"service_account" is written to a temp file as ADC).
+export AIXGO_VERTEX_API_KEY="<key-or-sa-json>"
+```
+
+In GitHub Actions, pass reusable-workflow inputs `vertex-project`, `vertex-location`, and secret `vertex-api-key` instead of Azure. The workflow installs `@google/gemini-cli` when `vertex-project` is set. Default model is `gemini-2.5-pro` (override with `--model` / workflow `model:`).
 
 ## Deployment model
 
@@ -236,6 +290,7 @@ Roadmap, roughly in order:
 - Wiring the read-only reviewer role into the loop so a diff is reviewed before it reaches a human.
 - The self-onboarding flow via `init` and `init --workflow`. **Done.**
 - The Codex on Azure OpenAI engine adapter. **Done.**
+- Gemini on Vertex AI (`engine: gemini`). **Done** on this branch / upcoming release.
 - Self-hosted models on Hugging Face.
 
 If you are evaluating it now, read that as beta software rather than a polished product. The core loops work; reviewer wiring is still in progress, and self-onboarding shipped as `init` and `init --workflow`.

@@ -11,6 +11,13 @@ You will:
 - run a one-time self-test
 - hand the first issue to the agent
 
+## Contents
+
+- [Before you begin](#before-you-begin)
+- [Install and configure](#install-and-configure)
+- [Local CLI vs GitHub Actions](#local-cli-vs-github-actions) — Codex / Claude / **Gemini (Vertex)**
+- [Watching it run before it writes](#watching-it-run-before-it-writes)
+
 ## Before you begin
 
 You need:
@@ -18,7 +25,8 @@ You need:
 - Go installed locally so you can run `go install`
 - `gh` authenticated against the repository you want to onboard
 - write access on that repository
-- an Azure OpenAI endpoint and API key
+- model credentials: an Azure OpenAI endpoint and API key (Codex, the default),
+  or a Vertex AI project and API key (`engine: gemini`)
 
 ## Install and configure
 
@@ -276,6 +284,24 @@ engine: claude
 aixgo-code run owner/repo#123 --repo-dir .
 ```
 
+To use Gemini on Vertex AI instead, set `engine: gemini` and the Vertex
+variables. The reusable workflow installs the Gemini CLI when
+`vertex-project` is passed, and does not need Azure:
+
+```yaml
+gate: make check
+engine: gemini
+```
+
+```sh
+export AIXGO_VERTEX_PROJECT="<project>"
+export AIXGO_VERTEX_LOCATION="us-central1"   # optional, this is the default
+# Either a Vertex API key, or the contents of a service-account JSON key
+# (a value starting with {"type":"service_account"...} is used as ADC).
+export AIXGO_VERTEX_API_KEY="<key-or-sa.json-contents>"
+aixgo-code run owner/repo#123 --repo-dir .
+```
+
 ### GitHub Actions
 
 For the hosted-in-your-GitHub path, the caller workflow in your repository
@@ -293,9 +319,12 @@ passes:
 The reusable workflow installs the CLI, exports the endpoint and key for the
 job, and runs `aixgo-code run` or `aixgo-code address`.
 
-That hosted path is still Codex-on-Azure only. The reusable workflow installs
-the Codex CLI, not the Claude CLI, and its inputs and secrets still require the
-Azure endpoint and API key.
+The hosted path follows `.github/aixgo.yml` `engine:`. Codex (the default)
+still needs the Azure endpoint and key, and the workflow installs the Codex
+CLI. `engine: gemini` needs `vertex-project`, `vertex-location`, and
+`vertex-api-key` instead, and the workflow installs the Gemini CLI. Claude
+is still a local-CLI path; the reusable workflow does not install the Claude
+CLI.
 
 ## Watching it run before it writes
 

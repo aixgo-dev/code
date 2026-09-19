@@ -38,9 +38,20 @@ on:
         required: true
         type: string
       azure-openai-endpoint:
-        description: Azure OpenAI endpoint, for example https://resource.openai.azure.com.
-        required: true
+        description: Azure OpenAI endpoint, for example https://resource.openai.azure.com. Required for the default Codex engine; unused when engine is claude or gemini.
+        required: false
         type: string
+        default: ""
+      vertex-project:
+        description: Google Cloud project for Vertex AI. Required when engine is gemini.
+        required: false
+        type: string
+        default: ""
+      vertex-location:
+        description: Vertex AI location, for example us-central1.
+        required: false
+        type: string
+        default: us-central1
       model:
         description: Engine model or deployment name passed to the Aixgo CLI.
         default: gpt-5.4
@@ -53,7 +64,9 @@ on:
         type: string
     secrets:
       azure-openai-api-key:
-        required: true
+        required: false
+      vertex-api-key:
+        required: false
       github-app-private-key:
         required: true
 
@@ -104,6 +117,9 @@ jobs:
         env:
           AIXGO_AZURE_OPENAI_ENDPOINT: ${{ inputs['azure-openai-endpoint'] }}
           AIXGO_AZURE_OPENAI_API_KEY: ${{ secrets['azure-openai-api-key'] }}
+          AIXGO_VERTEX_PROJECT: ${{ inputs['vertex-project'] }}
+          AIXGO_VERTEX_LOCATION: ${{ inputs['vertex-location'] }}
+          AIXGO_VERTEX_API_KEY: ${{ secrets['vertex-api-key'] }}
           AIXGO_GH_APP_CLIENT_ID: ${{ inputs['github-app-client-id'] }}
           AIXGO_GH_APP_PRIVATE_KEY: ${{ secrets['github-app-private-key'] }}
         run: aixgo-code preflight --repo-dir . --actions
@@ -128,13 +144,21 @@ jobs:
         run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
       - name: Install Codex CLI
+        if: ${{ inputs['azure-openai-endpoint'] != '' }}
         run: npm install -g @openai/codex@0.146.0
+
+      - name: Install Gemini CLI
+        if: ${{ inputs['vertex-project'] != '' }}
+        run: npm install -g @google/gemini-cli@0.60.0
 
       - name: Run Aixgo
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           AIXGO_AZURE_OPENAI_ENDPOINT: ${{ inputs['azure-openai-endpoint'] }}
           AIXGO_AZURE_OPENAI_API_KEY: ${{ secrets['azure-openai-api-key'] }}
+          AIXGO_VERTEX_PROJECT: ${{ inputs['vertex-project'] }}
+          AIXGO_VERTEX_LOCATION: ${{ inputs['vertex-location'] }}
+          AIXGO_VERTEX_API_KEY: ${{ secrets['vertex-api-key'] }}
           COMMENT_BODY: ${{ inputs['comment-body'] }}
         # --base is explicit because actions/checkout never creates origin/HEAD,
         # which is the CLI's default base. The CLI resolves that case on its own
@@ -198,6 +222,9 @@ jobs:
         env:
           AIXGO_AZURE_OPENAI_ENDPOINT: ${{ inputs['azure-openai-endpoint'] }}
           AIXGO_AZURE_OPENAI_API_KEY: ${{ secrets['azure-openai-api-key'] }}
+          AIXGO_VERTEX_PROJECT: ${{ inputs['vertex-project'] }}
+          AIXGO_VERTEX_LOCATION: ${{ inputs['vertex-location'] }}
+          AIXGO_VERTEX_API_KEY: ${{ secrets['vertex-api-key'] }}
           AIXGO_GH_APP_CLIENT_ID: ${{ inputs['github-app-client-id'] }}
           AIXGO_GH_APP_PRIVATE_KEY: ${{ secrets['github-app-private-key'] }}
         run: aixgo-code preflight --repo-dir . --actions
@@ -222,13 +249,21 @@ jobs:
         run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
       - name: Install Codex CLI
+        if: ${{ inputs['azure-openai-endpoint'] != '' }}
         run: npm install -g @openai/codex@0.146.0
+
+      - name: Install Gemini CLI
+        if: ${{ inputs['vertex-project'] != '' }}
+        run: npm install -g @google/gemini-cli@0.60.0
 
       - name: Address review feedback
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           AIXGO_AZURE_OPENAI_ENDPOINT: ${{ inputs['azure-openai-endpoint'] }}
           AIXGO_AZURE_OPENAI_API_KEY: ${{ secrets['azure-openai-api-key'] }}
+          AIXGO_VERTEX_PROJECT: ${{ inputs['vertex-project'] }}
+          AIXGO_VERTEX_LOCATION: ${{ inputs['vertex-location'] }}
+          AIXGO_VERTEX_API_KEY: ${{ secrets['vertex-api-key'] }}
           COMMENT_BODY: ${{ inputs['comment-body'] }}
         run: |
           if [ -n "${COMMENT_BODY}" ]; then
