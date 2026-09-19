@@ -322,7 +322,7 @@ type answerer struct {
 	dry   *dryrun.Forge
 	ref   domain.Issue
 	onPR  bool
-	ok bool
+	ok    bool
 }
 
 func newAnswerer(argv []string) (answerer, error) {
@@ -460,9 +460,9 @@ type commonFlags struct {
 	repoDir string
 	base    string
 	actor   string
-	dry  *dryrun.Forge
-	cfg  *config.Config
-	deps app.Deps
+	dry     *dryrun.Forge
+	cfg     *config.Config
+	deps    app.Deps
 }
 
 func parseInterleaved(fs *flag.FlagSet, argv []string) ([]string, error) {
@@ -541,7 +541,7 @@ func prepare(name string, argv []string) (*commonFlags, []string, error) {
 	}
 
 	deps := app.Deps{
-		Runner: newRunner(cfg, codexHome, *model),
+		Runner:                 newRunner(cfg, codexHome, *model),
 		Forge:                  forgeForLoop,
 		VCS:                    vcs,
 		Worktrees:              &worktree.Manager{RepoDir: *repoDir, BaseDir: filepath.Join(*stateDir, "worktrees")},

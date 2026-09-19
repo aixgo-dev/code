@@ -89,7 +89,7 @@ exit 0
 	t.Setenv("PATH", stubDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
 	var out bytes.Buffer
-	if err := initCmd([]string{"--repo-dir", repoDir, "--app-name", "acme-code"}, &out); err != nil {
+	if err := initCmd([]string{"--repo-dir", repoDir, "--app-name", "acme-code", "--engine", "codex"}, &out); err != nil {
 		t.Fatalf("initCmd: %v", err)
 	}
 
@@ -145,10 +145,10 @@ exit 0
 		// Naming the section is the point: two of the four go under Variables
 		// and two under Secrets, and a value filed on the wrong tab reads back
 		// empty rather than erroring.
-		"add two repository VARIABLES",
+		"add repository VARIABLES",
 		"AIXGO_GH_APP_CLIENT_ID       the App Client ID, the Iv23 string on the App settings page",
 		"AIXGO_AZURE_OPENAI_ENDPOINT  e.g. https://<resource>.openai.azure.com",
-		"add two repository SECRETS",
+		"add repository SECRETS",
 		"AIXGO_GH_APP_PRIVATE_KEY     the full PEM, including the BEGIN and END lines",
 		"AIXGO_AZURE_OPENAI_API_KEY   the Azure OpenAI key",
 		"Variables and Secrets are different tabs",
@@ -193,7 +193,7 @@ exit 0
 	t.Setenv("PATH", stubDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
 	var out bytes.Buffer
-	if err := initCmd([]string{"--repo-dir", repoDir, "--app-name", "acme-code"}, &out); err != nil {
+	if err := initCmd([]string{"--repo-dir", repoDir, "--app-name", "acme-code", "--engine", "codex"}, &out); err != nil {
 		t.Fatalf("initCmd: %v", err)
 	}
 
@@ -247,7 +247,7 @@ exit 0
 	buildVersionForTest(t, "0.1.0")
 
 	var out bytes.Buffer
-	if err := initCmd([]string{"--repo-dir", repoDir, "--workflow", "--app-name", "acme-code"}, &out); err != nil {
+	if err := initCmd([]string{"--repo-dir", repoDir, "--workflow", "--app-name", "acme-code", "--engine", "codex"}, &out); err != nil {
 		t.Fatalf("initCmd: %v", err)
 	}
 
@@ -311,7 +311,7 @@ exit 0
 	t.Setenv("PATH", stubDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
 	var out bytes.Buffer
-	if err := initCmd([]string{"--repo-dir", repoDir, "--app-name", "acme-code"}, &out); err != nil {
+	if err := initCmd([]string{"--repo-dir", repoDir, "--app-name", "acme-code", "--engine", "codex"}, &out); err != nil {
 		t.Fatalf("initCmd: %v", err)
 	}
 
@@ -360,7 +360,7 @@ exit 0
 	t.Setenv("PATH", stubDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
 	var out bytes.Buffer
-	if err := initCmd([]string{"--repo-dir", repoDir, "--workflow", "--app-name", "acme-code"}, &out); err != nil {
+	if err := initCmd([]string{"--repo-dir", repoDir, "--workflow", "--app-name", "acme-code", "--engine", "codex"}, &out); err != nil {
 		t.Fatalf("initCmd: %v", err)
 	}
 
@@ -411,7 +411,7 @@ func TestCallerWorkflowTemplateMatchesDocsTemplate(t *testing.T) {
 	// Render at the latest known tag with the sample handle the docs template
 	// shows: a release bump or a trigger change that misses either copy fails
 	// here.
-	got := []byte(renderCallerWorkflow(latestKnownWorkflowTag, "your-app-name"))
+	got := []byte(renderCallerWorkflow(latestKnownWorkflowTag, "your-app-name", "codex"))
 	if !bytes.Equal(got, want) {
 		t.Fatalf("rendered embedded template does not match docs template\nrendered:\n%s\n\ndocs:\n%s", got, want)
 	}
@@ -860,7 +860,7 @@ func TestInitWithWorkflowIsIdempotent(t *testing.T) {
 	t.Setenv("PATH", stubDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
 	var first bytes.Buffer
-	if err := initCmd([]string{"--repo-dir", repoDir, "--workflow", "--app-name", "acme-code"}, &first); err != nil {
+	if err := initCmd([]string{"--repo-dir", repoDir, "--workflow", "--app-name", "acme-code", "--engine", "codex"}, &first); err != nil {
 		t.Fatalf("first init: %v", err)
 	}
 	selftest := filepath.Join(repoDir, ".github", "workflows", "aixgo-selftest.yml")
@@ -869,7 +869,7 @@ func TestInitWithWorkflowIsIdempotent(t *testing.T) {
 	}
 
 	var second bytes.Buffer
-	if err := initCmd([]string{"--repo-dir", repoDir, "--workflow", "--app-name", "acme-code"}, &second); err != nil {
+	if err := initCmd([]string{"--repo-dir", repoDir, "--workflow", "--app-name", "acme-code", "--engine", "codex"}, &second); err != nil {
 		t.Fatalf("second init: %v", err)
 	}
 	if !strings.Contains(second.String(), "left existing "+selftest+" unchanged") {
