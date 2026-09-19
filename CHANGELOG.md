@@ -5,6 +5,8 @@ GitHub release notes for each tag.
 
 ## Unreleased
 
+## v0.6.0
+
 - **Gemini on Vertex AI** (`engine: gemini`). The loop, roles, and gate are
   unchanged. The adapter shells out to the Gemini CLI (`gemini -p`) and reads
   `AIXGO_VERTEX_PROJECT`, `AIXGO_VERTEX_LOCATION` (default `us-central1`), and
@@ -17,6 +19,13 @@ GitHub release notes for each tag.
   inputs. A Codex adopter who already passes them is unchanged. A Gemini
   adopter omits Azure and passes the Vertex values instead. The workflow
   installs `@google/gemini-cli@0.60.0` when `vertex-project` is set.
+- **`aixgo-code init` engine select.** Pass `--engine codex|gemini|claude`, or
+  pick from a TTY menu. Writes `engine:` into `.github/aixgo.yml` and a
+  conditional caller that wires only that provider's credentials. `--force`
+  overwrites existing starters so you can switch engines. Non-interactive
+  runs without `--engine` still default to `codex`.
+- Onboarding docs (`README`, `docs/setup.md`) describe the engine-aware init
+  flow and per-engine Variables/Secrets (org-level Actions config is fine).
 
 ## v0.5.0
 
