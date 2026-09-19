@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
@@ -9,7 +10,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"context"
 	"github.com/aixgo-dev/code/internal/app"
 	"github.com/aixgo-dev/code/internal/buildinfo"
 	"github.com/aixgo-dev/code/internal/config"
@@ -71,10 +71,6 @@ func initCmd(argv []string, stdout io.Writer) error {
 		if err != nil {
 			return err
 		}
-		// The self-test answers questions only a real runner can answer. It is
-		// written alongside the caller so a bad install fails in a minute here
-		// rather than silently during a real run, and the next steps tell the
-		// operator to remove it once it has done its job.
 		wroteSelftest, err = writeStarterFile(selftestPath, selftestWorkflowTemplate, *force)
 		if err != nil {
 			return err
@@ -173,7 +169,6 @@ func promptEngine(in io.Reader, out io.Writer) (string, error) {
 	case "3":
 		return "claude", nil
 	default:
-		// Accept engine names typed into the prompt as well as numbers.
 		if e, err := normalizeEngine(choice); err == nil {
 			return e, nil
 		}
@@ -235,7 +230,7 @@ func printInitCredentialSteps(stdout io.Writer, engine string) {
 		fmt.Fprintln(stdout, "  - Claude locally: use your existing `claude` CLI login; no Azure or Vertex vars.")
 		fmt.Fprintln(stdout, "  - Claude on Actions is not wired yet (aixgo-dev/code#147). The caller has no")
 		fmt.Fprintln(stdout, "    Anthropic secret input until that lands; prefer local `aixgo-code` for Claude today.")
-	default: // codex
+	default:
 		fmt.Fprintln(stdout, "      AIXGO_AZURE_OPENAI_ENDPOINT  e.g. https://<resource>.openai.azure.com")
 		fmt.Fprintln(stdout, "  - add repository SECRETS, on the Secrets tab of that same page:")
 		fmt.Fprintln(stdout, "      AIXGO_GH_APP_PRIVATE_KEY     the full PEM, including the BEGIN and END lines")
@@ -304,14 +299,12 @@ func callerEngineBlocks(engine string) (inputs, secrets string) {
 		secrets = "      vertex-api-key: ${{ secrets.AIXGO_VERTEX_API_KEY }}\n" +
 			"      github-app-private-key: ${{ secrets.AIXGO_GH_APP_PRIVATE_KEY }}"
 	case "claude":
-		// #147 tracks Anthropic secret + CLI install on Actions. Until then the
-		// caller still authenticates as the App but has no model credentials.
 		inputs = "      # Claude on Actions is not wired yet (aixgo-dev/code#147):\n" +
 			"      # the reusable workflow does not install the Claude CLI or accept\n" +
 			"      # an Anthropic secret. Local `aixgo-code` with engine: claude uses\n" +
 			"      # your existing claude CLI login."
 		secrets = "      github-app-private-key: ${{ secrets.AIXGO_GH_APP_PRIVATE_KEY }}"
-	default: // codex
+	default:
 		inputs = "      azure-openai-endpoint: ${{ vars.AIXGO_AZURE_OPENAI_ENDPOINT }}\n" +
 			"      # model: my-gpt-5-4-deployment"
 		secrets = "      azure-openai-api-key: ${{ secrets.AIXGO_AZURE_OPENAI_API_KEY }}\n" +
