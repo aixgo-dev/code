@@ -11,6 +11,13 @@ You will:
 - run a one-time self-test
 - hand the first issue to the agent
 
+## Contents
+
+- [Before you begin](#before-you-begin)
+- [Install and configure](#install-and-configure)
+- [Local CLI vs GitHub Actions](#local-cli-vs-github-actions) — Codex / Claude / **Gemini (Vertex)**
+- [Watching it run before it writes](#watching-it-run-before-it-writes)
+
 ## Before you begin
 
 You need:

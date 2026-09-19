@@ -13,3 +13,6 @@ appName: aixgo-code
 gate: make check
 
 prDescription: rich
+
+# Dogfood on Vertex Gemini (not Azure OpenAI).
+engine: gemini
