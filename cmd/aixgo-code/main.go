@@ -1,10 +1,3 @@
-// Command aixgo is the CLI for Aixgo Code. It runs the same engine
-// the GitHub Action runs, locally, for development and debugging.
-//
-//	aixgo-code version
-//	aixgo-code run <owner/repo#N> [flags]
-//
-// This is an early scaffold. See STATUS.md.
 package main
 
 import (
@@ -43,10 +36,6 @@ func main() {
 	os.Exit(dispatch(os.Args[1:], os.Stdout, os.Stderr))
 }
 
-// dispatch runs one command and returns the process exit code. main is only a
-// wrapper around it, so the whole entry point (argument handling, exit codes,
-// error reporting) is reachable from a test instead of being the one part of
-// the CLI that nothing exercises.
 func dispatch(args []string, stdout, stderr io.Writer) int {
 	if len(args) == 0 {
 		usage(stderr)
@@ -54,9 +43,6 @@ func dispatch(args []string, stdout, stderr io.Writer) int {
 	}
 	fail := func(err error) int {
 		fmt.Fprintln(stderr, "error:", err)
-		// A missing adopter-set value is something to go and set, not a bug to
-		// report. Its own exit code lets a caller tell those apart without
-		// matching on message text.
 		if errors.Is(err, ErrConfigMissing) {
 			return 3
 		}
@@ -97,7 +83,7 @@ func usage(w io.Writer) {
 
 usage:
   aixgo-code version
-  aixgo-code init [--repo-dir .] [--workflow]
+  aixgo-code init [--repo-dir .] [--workflow] [--engine codex|claude|gemini] [--force]
   aixgo-code preflight [--repo-dir .]
   aixgo-code command <owner/repo#N> --body "<comment>" [flags]
   aixgo-code run <owner/repo#N> [flags]
@@ -140,6 +126,11 @@ labelPrefix: ax
 # the two ever disagree.
 appName: __AIXGO_APP_NAME__
 
+# Model engine: codex (Azure OpenAI, default), gemini (Vertex AI), or claude
+# (local CLI today; Actions install tracked in aixgo-dev/code#147).
+# Chosen by "aixgo-code init --engine" or the interactive menu.
+engine: __AIXGO_ENGINE__
+
 # Required. Fill this in with the real gate that is already green on main.
 gate:
 
@@ -165,10 +156,6 @@ var callerWorkflowTemplate string
 //go:embed aixgo-selftest.yml.tmpl
 var selftestWorkflowTemplate string
 
-// engineEnv validates the selected engine settings and returns the normalized
-// Azure endpoint when the engine needs one. It is the single implementation:
-// `prepare` calls it before a run, and `preflight` calls it so a workflow can
-// fail early without a second copy of these rules written in shell.
 func usesAzure(cfg *config.Config) bool {
 	if cfg == nil {
 		return true
@@ -210,21 +197,8 @@ func engineEnv(cfg *config.Config) (string, error) {
 	return endpoint, nil
 }
 
-// newVCS builds the git layer with a committer identity. A GitHub Actions
-// runner has none configured, so without this a commit fails with "Author
-// identity unknown" after the change is already made and the gate has passed.
-// The identity is the credential's own login, so commits are attributable to
-// whoever the run authenticated as.
-// ErrConfigMissing marks a missing adopter-set value, as opposed to an internal
-// failure. The two want different responses: one is something to go and set,
-// the other is a bug. dispatch turns this into its own exit code so a caller
-// can tell them apart without parsing text.
 var ErrConfigMissing = errors.New("configuration missing")
 
-// section is where a value lives in the adopter's repository settings. GitHub
-// puts Variables and Secrets on different tabs, and a value filed under the
-// wrong one reads back as empty rather than failing, so every message about a
-// missing value has to say which tab it belongs on.
 type section string
 
 const (
@@ -232,9 +206,6 @@ const (
 	sectionSecret   section = "secret"
 )
 
-// requireSet returns an error naming the value and its section when unset or
-// empty. Empty matters as much as unset: an empty string is exactly what a
-// value filed under the wrong tab looks like from here.
 func requireSet(name string, where section) error {
 	if strings.TrimSpace(os.Getenv(name)) != "" {
 		return nil
@@ -252,24 +223,6 @@ func newVCS(self string) *vcsgit.Git {
 	}
 }
 
-// newRunner builds the engine runner, honouring AIXGO_SANDBOX.
-//
-// The sandbox stays on. Nothing in this repository widens it, and the knob
-// exists only so an adopter who has genuinely sandboxed their runners
-// externally can decide that for themselves.
-//
-// The default sandbox uses bubblewrap on Linux, which needs an unprivileged
-// user namespace. Ubuntu 24.04 restricts those by AppArmor, so on a stock
-// GitHub runner every command the engine tried died at startup:
-//
-//	bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted
-//
-// The engine then read nothing and changed nothing while still exiting
-// successfully, which is why it looked like a silent no-op. The reusable
-// workflow now enables that kernel feature before the engine runs, which lets
-// the sandbox start rather than widening it. A run that still cannot sandbox
-// stops and a human finishes the work; it never falls back to running
-// unconfined. See docs/faq.md and the self-test.
 func newRunner(cfg *config.Config, codexHome, model string) engine.Runner {
 	if cfg.Engine == "claude" {
 		return &claude.Runner{Model: model}
@@ -287,8 +240,6 @@ func newRunner(cfg *config.Config, codexHome, model string) engine.Runner {
 	return r
 }
 
-// takeBody removes --body (in either form) from argv and returns it with the
-// remaining arguments.
 func takeBody(argv []string) (body string, rest []string, err error) {
 	for i := 0; i < len(argv); i++ {
 		a := argv[i]
@@ -309,9 +260,6 @@ func takeBody(argv []string) (body string, rest []string, err error) {
 	return body, rest, nil
 }
 
-// appNameFor reads the configured App handle from the same --repo-dir the rest
-// of the command will use. It parses only that flag, because run and address
-// own the full flag set and a second copy of it would drift.
 func appNameFor(argv []string) (string, error) {
 	repoDir := "."
 	for i, a := range argv {
@@ -332,20 +280,11 @@ func appNameFor(argv []string) (string, error) {
 	return cfg.AppName, nil
 }
 
-// commandCmd routes a comment addressed to the agent to the matching loop. The
-// comment body is untrusted, so it is parsed into a fixed vocabulary here and
-// never interpreted: an unrecognised comment does nothing at all.
 func commandCmd(argv []string, stdout io.Writer) error {
-	// --body is pulled out by hand and everything else is forwarded untouched,
-	// because run and address own the rest of the flags. Parsing them here would
-	// mean maintaining a second copy of that flag set.
 	body, rest, err := takeBody(argv)
 	if err != nil {
 		return err
 	}
-	// The handle is per-repository, so the config has to be read before the
-	// comment can be parsed at all: which App this repository installed is the
-	// thing that decides what a command even looks like here.
 	appName, err := appNameFor(rest)
 	if err != nil {
 		return err
@@ -356,10 +295,6 @@ func commandCmd(argv []string, stdout io.Writer) error {
 	case command.Help:
 		return reply(rest, command.HelpTextFor(appName), stdout)
 	case command.Go, command.Address:
-		// A verb aimed at the wrong surface is answered, not run. This lives on
-		// the comment path rather than inside run and address because someone
-		// typing `aixgo-code address owner/repo#96` at a shell wants an error,
-		// not a comment posted in their name.
 		a, err := newAnswerer(rest)
 		if err != nil {
 			return err
@@ -372,9 +307,6 @@ func commandCmd(argv []string, stdout io.Writer) error {
 		}
 		return addressCmd(rest)
 	default:
-		// Only answer a comment that was actually addressed to the agent.
-		// Anything else is someone mentioning it in passing, and replying to
-		// that would make it the noisiest participant in every thread.
 		if command.Addressed(body, appName) {
 			return reply(rest, command.UnknownTextFor(appName), stdout)
 		}
@@ -383,31 +315,18 @@ func commandCmd(argv []string, stdout io.Writer) error {
 	}
 }
 
-// newCommentForge builds the forge used to answer a comment. It is a variable so
-// the routing tests can answer without a network.
 var newCommentForge = func() forge2.Forge { return &forgegh.Forge{} }
 
-// answerer is the little that is needed to reply to a comment: which thread it
-// arrived on, and something to answer with.
-//
-// It deliberately does not go through prepare. Answering `help`, or telling
-// someone they used the wrong verb, must work in a repository that has no config
-// and no engine credentials, because those are exactly the repositories where
-// someone is most likely to be asking.
 type answerer struct {
 	forge forge2.Forge
 	dry   *dryrun.Forge
 	ref   domain.Issue
 	onPR  bool
-	// ok is false when the arguments carry no issue ref, which is what a local
-	// run driven by hand looks like. There is then nothing to answer on.
-	ok bool
+	ok    bool
 }
 
 func newAnswerer(argv []string) (answerer, error) {
 	var a answerer
-	// The ref is found by shape rather than by position, because the flags it
-	// sits among belong to run and address and are not parsed here.
 	for _, arg := range argv {
 		if ref, err := app.ParseIssueRef(arg); err == nil {
 			a.ref, a.ok = ref, true
@@ -431,9 +350,6 @@ func newAnswerer(argv []string) (answerer, error) {
 	return a, nil
 }
 
-// post answers on the thread and echoes the same text, so a run driven from a
-// terminal still shows it where the operator is looking. Under a dry run the
-// post is recorded rather than made, like every other GitHub write.
 func (a answerer) post(body string, stdout io.Writer) error {
 	fmt.Fprintln(stdout, body)
 	if !a.ok {
@@ -453,8 +369,6 @@ func (a answerer) post(body string, stdout io.Writer) error {
 	return a.forge.Comment(ctx, a.ref.Repo, a.ref.Number, body)
 }
 
-// dryRunRequested reads the flag without owning it. run and address define the
-// real flag set; this only needs to know whether to record instead of post.
 func dryRunRequested(argv []string) bool {
 	if os.Getenv("AIXGO_DRY_RUN") != "" {
 		return true
@@ -468,7 +382,6 @@ func dryRunRequested(argv []string) bool {
 	return false
 }
 
-// reply answers on whatever thread the arguments point at.
 func reply(argv []string, body string, stdout io.Writer) error {
 	a, err := newAnswerer(argv)
 	if err != nil {
@@ -477,27 +390,10 @@ func reply(argv []string, body string, stdout io.Writer) error {
 	return a.post(body, stdout)
 }
 
-// preflightCmd validates the repo config and engine settings, then exits. A
-// workflow runs it before installing the rest of the toolchain, so a
-// misconfigured repository finds out in seconds and the rules live in one place.
-// checkMentionAgreement fails when the configured handle and the caller
-// workflow's trigger disagree.
-//
-// The handle necessarily lives in two files: the parser reads it from config,
-// which the App can push, while the trigger has to be a literal in the workflow,
-// which the App deliberately cannot. Drift between them is silent in the worst
-// way — comments simply stop working, with no error anywhere — so it is checked
-// on every run rather than left to be discovered.
 func checkMentionAgreement(repoDir, appName string) error {
-	// Find the caller by what it does, not by what it is called. init writes
-	// .github/workflows/aixgo.yml, but an adopter can rename it, and in
-	// this repository that name belongs to the reusable workflow itself. A check
-	// keyed on the filename would pass on the wrong file, or fail on a valid
-	// install, which is worse than not checking.
 	dir := filepath.Join(repoDir, ".github", "workflows")
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		// No workflows at all is a valid local setup, not a misconfiguration.
 		return nil
 	}
 	want := "'" + command.MentionFor(appName) + "'"
@@ -543,9 +439,6 @@ func preflightCmd(argv []string, stdout io.Writer) error {
 	if err := checkMentionAgreement(*repoDir, cfg.AppName); err != nil {
 		return err
 	}
-	// The App credentials are only reachable when the caller workflow exports
-	// them. A local run authenticates as the operator and never uses them, so
-	// checking them there would fail a working setup.
 	if *actions {
 		for _, v := range []struct {
 			name  string
@@ -563,23 +456,15 @@ func preflightCmd(argv []string, stdout io.Writer) error {
 	return nil
 }
 
-// commonFlags are the flags shared by run and address, plus the resolved config
-// and dependency graph both commands need.
 type commonFlags struct {
 	repoDir string
 	base    string
 	actor   string
-	// dry is set only on a dry run, and holds the writes that were skipped.
-	dry  *dryrun.Forge
-	cfg  *config.Config
-	deps app.Deps
+	dry     *dryrun.Forge
+	cfg     *config.Config
+	deps    app.Deps
 }
 
-// parseInterleaved parses argv with fs, allowing flags before or after
-// positional arguments. Stdlib flag parsing stops at the first positional, so
-// `run owner/repo#1 --repo-dir /x` would silently ignore the flag while the
-// usage text advertises exactly that form. Positionals are collected in order
-// and parsing resumes after each one, so both orders (and a mix) are honored.
 func parseInterleaved(fs *flag.FlagSet, argv []string) ([]string, error) {
 	var positionals []string
 	for {
@@ -595,15 +480,6 @@ func parseInterleaved(fs *flag.FlagSet, argv []string) ([]string, error) {
 	}
 }
 
-// prepare parses the shared flags, loads the repo config, validates the engine
-// environment, writes the codex config, and builds the dependency graph. It
-// returns the remaining positional arguments so each command can parse its own
-// reference (an issue for run, a pull request for address).
-// isBotLogin reports whether a login belongs to a GitHub App installation.
-// The Actions runtime always authenticates as an App, and that App deliberately
-// holds no workflows permission, so any bot identity is restricted. An empty
-// login means a local run under a human's own credential, which can push
-// workflow files and must not be blocked.
 func isBotLogin(login string) bool {
 	return strings.HasSuffix(login, "[bot]")
 }
@@ -649,9 +525,6 @@ func prepare(name string, argv []string) (*commonFlags, []string, error) {
 
 	forge := &forgegh.Forge{StateLabels: app.StateLabels(prefix), Self: os.Getenv("AIXGO_GH_APP_LOGIN")}
 	dry := *dryRun || os.Getenv("AIXGO_DRY_RUN") != ""
-	// When the caller did not name the identity, ask the credential who it is.
-	// The workflow used to do this with a gh graphql call and hand the answer
-	// back in an environment variable; the product can just look.
 	if forge.Self == "" {
 		if login, err := forge.Whoami(context.Background()); err == nil {
 			forge.Self = login
@@ -668,9 +541,7 @@ func prepare(name string, argv []string) (*commonFlags, []string, error) {
 	}
 
 	deps := app.Deps{
-		Runner: newRunner(cfg, codexHome, *model),
-		// Self, when set, filters the agent's own review feedback out of the fix
-		// loop. Empty for local runs, where the operator is a human, not the bot.
+		Runner:                 newRunner(cfg, codexHome, *model),
 		Forge:                  forgeForLoop,
 		VCS:                    vcs,
 		Worktrees:              &worktree.Manager{RepoDir: *repoDir, BaseDir: filepath.Join(*stateDir, "worktrees")},
@@ -680,9 +551,6 @@ func prepare(name string, argv []string) (*commonFlags, []string, error) {
 	return &commonFlags{repoDir: *repoDir, base: *base, actor: *actor, cfg: cfg, deps: deps, dry: dryForge}, rest, nil
 }
 
-// reportDryRun prints the writes a dry run skipped, and appends them to the
-// GitHub Actions run summary when there is one, so the result is readable on
-// the run page rather than buried in step logs.
 func reportDryRun(c *commonFlags, w io.Writer) {
 	if c == nil || c.dry == nil {
 		return
@@ -769,116 +637,6 @@ func addressCmd(argv []string) error {
 	return nil
 }
 
-func initCmd(argv []string, stdout io.Writer) error {
-	fs := flag.NewFlagSet("init", flag.ContinueOnError)
-	repoDir := fs.String("repo-dir", ".", "path to the target repo checkout")
-	writeWorkflow := fs.Bool("workflow", false, "also write the Actions caller workflow")
-	appNameFlag := fs.String("app-name", "", "the GitHub App you installed, for example acme-code; comment commands address it")
-	if _, err := parseInterleaved(fs, argv); err != nil {
-		return err
-	}
-
-	appName, err := resolveAppName(*repoDir, *appNameFlag)
-	if err != nil {
-		return err
-	}
-
-	configPath := filepath.Join(*repoDir, ".github", "aixgo.yml")
-	wroteConfig, err := writeStarterConfig(configPath, appName)
-	if err != nil {
-		return err
-	}
-	workflowPath := filepath.Join(*repoDir, ".github", "workflows", "aixgo.yml")
-	selftestPath := filepath.Join(*repoDir, ".github", "workflows", "aixgo-selftest.yml")
-	wroteWorkflow := false
-	wroteSelftest := false
-	if *writeWorkflow {
-		wroteWorkflow, err = writeStarterFile(workflowPath, renderCallerWorkflow(buildinfo.Version, appName))
-		if err != nil {
-			return err
-		}
-		// The self-test answers questions only a real runner can answer. It is
-		// written alongside the caller so a bad install fails in a minute here
-		// rather than silently during a real run, and the next steps tell the
-		// operator to remove it once it has done its job.
-		wroteSelftest, err = writeStarterFile(selftestPath, selftestWorkflowTemplate)
-		if err != nil {
-			return err
-		}
-	}
-
-	labels := app.StateLabels(config.DefaultLabelPrefix)
-	created, err := (&forgegh.Forge{Dir: *repoDir}).EnsureLabels(context.Background(), labels)
-	if err != nil {
-		return err
-	}
-
-	if wroteConfig {
-		fmt.Fprintf(stdout, "wrote %s\n", configPath)
-	} else {
-		fmt.Fprintf(stdout, "left existing %s unchanged\n", configPath)
-	}
-	if *writeWorkflow {
-		if wroteWorkflow {
-			fmt.Fprintf(stdout, "wrote %s\n", workflowPath)
-		} else {
-			fmt.Fprintf(stdout, "left existing %s unchanged\n", workflowPath)
-		}
-		if wroteSelftest {
-			fmt.Fprintf(stdout, "wrote %s\n", selftestPath)
-		} else {
-			fmt.Fprintf(stdout, "left existing %s unchanged\n", selftestPath)
-		}
-	}
-	if len(created) == 0 {
-		fmt.Fprintln(stdout, "labels already present: no changes")
-	} else {
-		fmt.Fprintf(stdout, "created labels: %s\n", strings.Join(created, ", "))
-	}
-	createURL, resolved := appCreateURL(*repoDir)
-	fmt.Fprintln(stdout, "next steps:")
-	fmt.Fprintln(stdout, "  1. Create your OWN GitHub App. It has to be yours: its private key is what mints")
-	fmt.Fprintln(stdout, "     the tokens that act on your repository, so a shared key would let its holder act")
-	fmt.Fprintln(stdout, "     on every other installation. This is what keeps the agent inside your GitHub.")
-	fmt.Fprintln(stdout, "       "+createURL)
-	if !resolved {
-		fmt.Fprintln(stdout, "       (if this repository belongs to an organisation, use")
-		fmt.Fprintln(stdout, "        https://github.com/organizations/<org>/settings/apps/new instead)")
-	}
-	fmt.Fprintln(stdout, "     Name it anything you like; App names are globally unique, so you cannot reuse ours.")
-	fmt.Fprintln(stdout, "     Permissions, and nothing else:  Contents: Read and write")
-	fmt.Fprintln(stdout, "                                     Issues: Read and write")
-	fmt.Fprintln(stdout, "                                     Pull requests: Read and write")
-	fmt.Fprintln(stdout, "     Uncheck Active under Webhook. Actions triggers this runtime; an enabled webhook")
-	fmt.Fprintln(stdout, "     with nothing listening only generates failures.")
-	fmt.Fprintln(stdout, "     Set Any account under Where can this GitHub App be installed, if the App belongs")
-	fmt.Fprintln(stdout, "     to your personal account and the repository belongs to an organisation. An App")
-	fmt.Fprintln(stdout, "     restricted to its owner cannot be installed anywhere else, and this is the step")
-	fmt.Fprintln(stdout, "     most often missed.")
-	fmt.Fprintln(stdout, "  2. Generate a private key on the App settings page and keep the download. GitHub")
-	fmt.Fprintln(stdout, "     shows it once. Note the Client ID there too, the Iv23 string.")
-	fmt.Fprintln(stdout, "  3. Install the App on this repository, from Install App on the same page.")
-	fmt.Fprintln(stdout, "     Reference: https://docs.github.com/apps/creating-github-apps")
-	fmt.Fprintln(stdout, "  - write the real gate in .github/aixgo.yml")
-	fmt.Fprintln(stdout, "  - verify that gate is green on your main branch")
-	fmt.Fprintln(stdout, "  - add two repository VARIABLES, under Settings > Secrets and variables > Actions > Variables:")
-	fmt.Fprintln(stdout, "      AIXGO_GH_APP_CLIENT_ID       the App Client ID, the Iv23 string on the App settings page")
-	fmt.Fprintln(stdout, "      AIXGO_AZURE_OPENAI_ENDPOINT  e.g. https://<resource>.openai.azure.com")
-	fmt.Fprintln(stdout, "  - add two repository SECRETS, on the Secrets tab of that same page:")
-	fmt.Fprintln(stdout, "      AIXGO_GH_APP_PRIVATE_KEY     the full PEM, including the BEGIN and END lines")
-	fmt.Fprintln(stdout, "      AIXGO_AZURE_OPENAI_API_KEY   the Azure OpenAI key")
-	fmt.Fprintln(stdout, "    Variables and Secrets are different tabs. A value filed under the wrong one reads back")
-	fmt.Fprintln(stdout, "    as empty, and the run fails without saying why.")
-	fmt.Fprintln(stdout, "  - merge the PR containing the config and workflow changes")
-	fmt.Fprintln(stdout, "  - run the self-test once: gh workflow run aixgo-selftest")
-	fmt.Fprintln(stdout, "  - delete .github/workflows/aixgo-selftest.yml once it passes")
-	fmt.Fprintln(stdout, "  - file an issue and apply the ax:go label")
-	return nil
-}
-
-// appCreateURL returns the GitHub form for creating an App, which differs by
-// account type. Best effort: init must still work when gh cannot answer, so a
-// failure returns the personal form and a note rather than an error.
 func appCreateURL(repoDir string) (string, bool) {
 	out, err := exec.Command("gh", "repo", "view", "--json", "owner", "--jq", ".owner.login").Output()
 	_ = repoDir
@@ -897,49 +655,6 @@ func appCreateURL(repoDir string) (string, bool) {
 		return "https://github.com/organizations/" + owner + "/settings/apps/new", true
 	}
 	return "https://github.com/settings/apps/new", true
-}
-
-func writeStarterConfig(path, appName string) (bool, error) {
-	return writeStarterFile(path, strings.ReplaceAll(starterConfig, callerWorkflowAppNameToken, appName))
-}
-
-// resolveAppName decides the handle to write into both files. An explicit
-// --app-name wins; otherwise an existing config keeps what it already says, so
-// re-running init to pick up a new release does not silently change the handle
-// a team already types.
-func resolveAppName(repoDir, flagValue string) (string, error) {
-	if v := strings.TrimSuffix(strings.TrimPrefix(strings.TrimSpace(flagValue), "@"), "[bot]"); v != "" {
-		return v, nil
-	}
-	if cfg, err := config.Load(filepath.Join(repoDir, ".github", "aixgo.yml")); err == nil && cfg.AppName != "" {
-		return cfg.AppName, nil
-	}
-	return "", errors.New("--app-name is required: comment commands address the App you installed, and its name is unique to you. Pass the App's name without the \"[bot]\" suffix, for example --app-name acme-code")
-}
-
-func writeStarterFile(path, body string) (bool, error) {
-	if _, err := os.Stat(path); err == nil {
-		return false, nil
-	} else if !os.IsNotExist(err) {
-		return false, err
-	}
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		return false, err
-	}
-	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
-		return false, err
-	}
-	return true, nil
-}
-
-// renderCallerWorkflow writes the trigger for the App this repository installed.
-// The handle cannot be a constant: App names are globally unique, so every
-// adopter's bot has its own, and the trigger has to match theirs or no comment
-// ever starts a run. It is templated here rather than matched loosely at
-// runtime so a mention of a colleague does not spin up a runner.
-func renderCallerWorkflow(version, appName string) string {
-	out := strings.ReplaceAll(callerWorkflowTemplate, callerWorkflowTagToken, workflowTemplateTag(version))
-	return strings.ReplaceAll(out, callerWorkflowAppNameToken, appName)
 }
 
 func workflowTemplateTag(version string) string {
@@ -968,7 +683,6 @@ func isReleaseVersion(version string) bool {
 	return true
 }
 
-// fetchIssue fills the issue title and body from GitHub via gh.
 func fetchIssue(iss *domain.Issue) error {
 	out, err := exec.Command("gh", "issue", "view", strconv.Itoa(iss.Number),
 		"--repo", iss.Repo, "--json", "title,body").Output()

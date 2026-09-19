@@ -1,3 +1,7 @@
+# Caller workflow written by `aixgo-code init --workflow`.
+# Credentials match the engine chosen at init (--engine or the interactive menu).
+# Re-run with --force --engine <name> to rewrite config and this file for a
+# different provider. Existing files are left unchanged without --force.
 name: aixgo
 
 on:
@@ -59,6 +63,7 @@ jobs:
       pr-number: ${{ github.event.issue.pull_request != null && github.event.issue.number || '' }}
       actor-login: ${{ github.event.comment.user.login }}
       azure-openai-endpoint: ${{ vars.AIXGO_AZURE_OPENAI_ENDPOINT }}
+      # model: my-gpt-5-4-deployment
     secrets:
       azure-openai-api-key: ${{ secrets.AIXGO_AZURE_OPENAI_API_KEY }}
       github-app-private-key: ${{ secrets.AIXGO_GH_APP_PRIVATE_KEY }}
