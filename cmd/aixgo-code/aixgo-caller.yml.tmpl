@@ -1,3 +1,7 @@
+# Caller workflow written by `aixgo-code init --workflow`.
+# Credentials match the engine chosen at init (--engine or the interactive menu).
+# Re-run with --force --engine <name> to rewrite config and this file for a
+# different provider. Existing files are left unchanged without --force.
 name: aixgo
 
 on:
@@ -17,11 +21,9 @@ jobs:
       github-app-client-id: ${{ vars.AIXGO_GH_APP_CLIENT_ID }}
       issue-number: ${{ github.event.issue.number }}
       actor-login: ${{ github.event.sender.login }}
-      azure-openai-endpoint: ${{ vars.AIXGO_AZURE_OPENAI_ENDPOINT }}
-      # model: my-gpt-5-4-deployment
+# __AIXGO_ENGINE_INPUTS__
     secrets:
-      azure-openai-api-key: ${{ secrets.AIXGO_AZURE_OPENAI_API_KEY }}
-      github-app-private-key: ${{ secrets.AIXGO_GH_APP_PRIVATE_KEY }}
+# __AIXGO_ENGINE_SECRETS__
 
   address:
     if: >-
@@ -33,11 +35,9 @@ jobs:
       github-app-client-id: ${{ vars.AIXGO_GH_APP_CLIENT_ID }}
       pr-number: ${{ github.event.pull_request.number }}
       actor-login: ${{ github.event.review.user.login }}
-      azure-openai-endpoint: ${{ vars.AIXGO_AZURE_OPENAI_ENDPOINT }}
-      # model: my-gpt-5-4-deployment
+# __AIXGO_ENGINE_INPUTS__
     secrets:
-      azure-openai-api-key: ${{ secrets.AIXGO_AZURE_OPENAI_API_KEY }}
-      github-app-private-key: ${{ secrets.AIXGO_GH_APP_PRIVATE_KEY }}
+# __AIXGO_ENGINE_SECRETS__
 
   comment:
     # issue_comment fires for any user on a public repository, so the command
@@ -58,7 +58,6 @@ jobs:
       issue-number: ${{ github.event.issue.pull_request == null && github.event.issue.number || '' }}
       pr-number: ${{ github.event.issue.pull_request != null && github.event.issue.number || '' }}
       actor-login: ${{ github.event.comment.user.login }}
-      azure-openai-endpoint: ${{ vars.AIXGO_AZURE_OPENAI_ENDPOINT }}
+# __AIXGO_ENGINE_INPUTS__
     secrets:
-      azure-openai-api-key: ${{ secrets.AIXGO_AZURE_OPENAI_API_KEY }}
-      github-app-private-key: ${{ secrets.AIXGO_GH_APP_PRIVATE_KEY }}
+# __AIXGO_ENGINE_SECRETS__
