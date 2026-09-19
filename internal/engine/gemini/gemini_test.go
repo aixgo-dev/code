@@ -172,6 +172,40 @@ func TestRunDefaultsLocationWhenUnset(t *testing.T) {
 	}
 }
 
+const echoTrustEnv = `#!/bin/sh
+printf '%s\n' "$GEMINI_CLI_TRUST_WORKSPACE"
+exit 0
+`
+
+func TestRunTrustsWorkspaceForHeadlessCI(t *testing.T) {
+	r := New()
+	r.Bin = writeFakeGemini(t, echoTrustEnv)
+	res, err := r.Run(context.Background(), domain.RunRequest{
+		Role: domain.RoleImplementer, WorkDir: t.TempDir(), Prompt: "x",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if res.Summary != "true" {
+		t.Fatalf("GEMINI_CLI_TRUST_WORKSPACE = %q, want true", res.Summary)
+	}
+}
+
+func TestRunPreservesCallerTrustWorkspaceOverride(t *testing.T) {
+	r := New()
+	r.Bin = writeFakeGemini(t, echoTrustEnv)
+	r.ExtraEnv = []string{"GEMINI_CLI_TRUST_WORKSPACE=false"}
+	res, err := r.Run(context.Background(), domain.RunRequest{
+		Role: domain.RoleImplementer, WorkDir: t.TempDir(), Prompt: "x",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if res.Summary != "false" {
+		t.Fatalf("caller override lost: %q", res.Summary)
+	}
+}
+
 func TestRunReportsAFailureAsAnEngineError(t *testing.T) {
 	r := New()
 	r.Bin = writeFakeGemini(t, "#!/bin/sh\necho boom >&2\nexit 3\n")
@@ -183,6 +217,26 @@ func TestRunReportsAFailureAsAnEngineError(t *testing.T) {
 	}
 	if !strings.Contains(res.Summary, "boom") {
 		t.Fatalf("the CLI's own output should be kept: %q", res.Summary)
+	}
+	if !strings.Contains(err.Error(), "boom") {
+		t.Fatalf("engine error should include CLI output: %v", err)
+	}
+}
+
+func TestRunReportsSilentFailureAsAnEngineError(t *testing.T) {
+	r := New()
+	r.Bin = writeFakeGemini(t, "#!/bin/sh\nexit 3\n")
+	res, err := r.Run(context.Background(), domain.RunRequest{
+		Role: domain.RoleImplementer, WorkDir: t.TempDir(), Prompt: "x",
+	})
+	if err == nil || res.Err == nil {
+		t.Fatal("a non-zero exit must surface as an engine error")
+	}
+	if !strings.Contains(err.Error(), "exit status 3") {
+		t.Fatalf("silent failure error = %v", err)
+	}
+	if strings.Contains(err.Error(), "\n") {
+		t.Fatalf("empty CLI output should not add a detail line: %v", err)
 	}
 }
 

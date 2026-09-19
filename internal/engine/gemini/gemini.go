@@ -76,7 +76,12 @@ func (r *Runner) Run(ctx context.Context, req domain.RunRequest) (domain.RunResu
 
 	res := domain.RunResult{Role: req.Role, Summary: tail(strings.TrimSpace(string(out)), 40)}
 	if runErr != nil {
-		res.Err = fmt.Errorf("gemini -p: %w", runErr)
+		msg := strings.TrimSpace(string(out))
+		if msg != "" {
+			res.Err = fmt.Errorf("gemini -p: %w\n%s", runErr, tail(msg, 20))
+		} else {
+			res.Err = fmt.Errorf("gemini -p: %w", runErr)
+		}
 		return res, res.Err
 	}
 	return res, nil
@@ -115,6 +120,13 @@ func (r *Runner) childEnv(workDir, credsPath string) []string {
 		env = append(env, "GOOGLE_APPLICATION_CREDENTIALS="+credsPath)
 	} else if k := strings.TrimSpace(os.Getenv("AIXGO_VERTEX_API_KEY")); k != "" {
 		env = append(env, "GOOGLE_API_KEY="+k)
+	}
+	// gemini-cli 0.60+ defaults folder trust on; headless CI checkouts are
+	// untrusted and exit 55 (FatalUntrustedWorkspaceError). -y does not bypass
+	// that gate — mirror unattended CI by trusting the workspace unless the
+	// caller already set the override.
+	if !hasEnvKey(r.ExtraEnv, "GEMINI_CLI_TRUST_WORKSPACE") {
+		env = append(env, "GEMINI_CLI_TRUST_WORKSPACE=true")
 	}
 	return env
 }
