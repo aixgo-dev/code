@@ -295,7 +295,7 @@ func callerEngineBlocks(engine string) (inputs, secrets string) {
 	case "gemini":
 		inputs = "      vertex-project: ${{ vars.AIXGO_VERTEX_PROJECT }}\n" +
 			"      vertex-location: ${{ vars.AIXGO_VERTEX_LOCATION }}\n" +
-			"      # model: gemini-2.5-pro"
+			"      # model: gemini-3.5-flash"
 		secrets = "      vertex-api-key: ${{ secrets.AIXGO_VERTEX_API_KEY }}\n" +
 			"      github-app-private-key: ${{ secrets.AIXGO_GH_APP_PRIVATE_KEY }}"
 	case "claude":

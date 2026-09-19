@@ -1079,11 +1079,11 @@ func TestNewRunnerSelectsTheEngine(t *testing.T) {
 	if !ok {
 		t.Fatal("engine: gemini must select the Gemini adapter")
 	}
-	if g.Model != "gemini-2.5-pro" {
-		t.Fatalf("gemini default model = %q, want gemini-2.5-pro", g.Model)
+	if g.Model != "gemini-3.5-flash" {
+		t.Fatalf("gemini default model = %q, want gemini-3.5-flash", g.Model)
 	}
 	g2, _ := newRunner(&config.Config{Engine: "gemini"}, t.TempDir(), "gpt-5.4").(*gemini.Runner)
-	if g2.Model != "gemini-2.5-pro" {
+	if g2.Model != "gemini-3.5-flash" {
 		t.Fatalf("the Codex default must not be forwarded to Gemini: %q", g2.Model)
 	}
 	g3, _ := newRunner(&config.Config{Engine: "gemini"}, t.TempDir(), "gemini-2.5-flash").(*gemini.Runner)
