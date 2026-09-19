@@ -223,6 +223,23 @@ func TestRunReportsAFailureAsAnEngineError(t *testing.T) {
 	}
 }
 
+func TestRunReportsSilentFailureAsAnEngineError(t *testing.T) {
+	r := New()
+	r.Bin = writeFakeGemini(t, "#!/bin/sh\nexit 3\n")
+	res, err := r.Run(context.Background(), domain.RunRequest{
+		Role: domain.RoleImplementer, WorkDir: t.TempDir(), Prompt: "x",
+	})
+	if err == nil || res.Err == nil {
+		t.Fatal("a non-zero exit must surface as an engine error")
+	}
+	if !strings.Contains(err.Error(), "exit status 3") {
+		t.Fatalf("silent failure error = %v", err)
+	}
+	if strings.Contains(err.Error(), "\n") {
+		t.Fatalf("empty CLI output should not add a detail line: %v", err)
+	}
+}
+
 func TestRunRequiresAWorkDir(t *testing.T) {
 	if _, err := New().Run(context.Background(), domain.RunRequest{Role: domain.RoleImplementer}); err == nil {
 		t.Fatal("expected an error with no WorkDir")
